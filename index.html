@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dirali</title>
+  <style>
+    body {
+      padding: 10px;
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      direction: rtl;
+      text-align: center;
+    }
+    h1 {
+      font-size: 16px;
+      color: #333;
+    }
+    table {
+      margin: 0 auto;
+      border-collapse: collapse;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      width: 100%;
+      max-width: 900px;
+    }
+    th, td {
+      padding: 6px;
+      text-align: center;
+      border: 1px solid #ddd;
+      font-size: 12px;
+    }
+    th {
+      background-color: #f2f2f2;
+      font-weight: bold;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+    .highlight {
+      color: #4CAF50;
+      font-weight: bold;
+    }
+    .celebration {
+      color: #FF5722;
+      font-weight: bold;
+    }
+    .message {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    .message a {
+      color: blue;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>תוצאות הגרלות</h1>
+  <div id="message" class="message"></div>
+  <table id="lottery-table">
+    <thead>
+      <tr>
+        <th>מספר הגרלה</th>
+        <th>יישוב</th>
+        <th>קבלן</th>
+        <th>דירות בהגרלה</th>
+        <th>נרשמים בהגרלה</th>
+        <th>מחיר למטר</th>
+        <th>מענק</th>
+        <th>סיכויי זכיה</th>
+        <th>הערות</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Rows will be dynamically added here -->
+    </tbody>
+  </table>
+  <script src="script.js"></script>
+</body>
+</html>
