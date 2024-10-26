@@ -260,6 +260,49 @@
         .medal {
             font-size: 1.2em;
         }
+
+        .tab-container {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            /* Space between tabs */
+            margin-bottom: 15px;
+        }
+
+        .tab-button {
+            position: relative;
+            padding: 10px 20px;
+            border: 1px solid #6DADE1;
+            /* Border color */
+            border-radius: 10px 10px 0 0;
+            /* Rounded corners */
+            background-color: #FFFFFF;
+            color: #6DADE1;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            /* Space between text and logo */
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+
+        .tab-button.active {
+            background-color: #6DADE1;
+            color: #FFFFFF;
+        }
+
+        .tab-button:hover {
+            background-color: #58E0A5;
+            color: #FFFFFF;
+        }
+
+        .tab-logo {
+            width: 16px;
+            height: 16px;
+            /* Example styling for logo, adjust based on actual logo size */
+        }
     </style>
 </head>
 
@@ -268,8 +311,13 @@
 
     <!-- Tab Navigation -->
     <div class="tab-container">
-        <button class="tab-button active" data-tab="all-data">נתונים מלאים</button>
-        <button class="tab-button" data-tab="summary-data">רק נתוני סיכום</button>
+        <button class="tab-button active" data-tab="all-data">
+            📊 נתונים מלאים
+            
+        </button>
+        <button class="tab-button" data-tab="summary-data">
+            📈 סיכום לפי ערים
+        </button>
     </div>
 
     <!-- Filter Toolbar (only in All Data tab) -->
