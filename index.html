@@ -151,7 +151,8 @@
             overflow: hidden;
         }
 
-        th, td {
+        th,
+        td {
             padding: 8px;
             text-align: center;
             border-bottom: 1px solid #D3D3D3;
@@ -161,10 +162,71 @@
             background-color: #6DADE1;
             color: #FFFFFF;
             cursor: pointer;
+            position: relative;
+            padding-right: 20px;
+            /* Adjust space for arrow */
         }
 
         th.sortable:hover {
             background-color: #58E0A5;
+        }
+
+        /* Highlight rows */
+        tr.summary-row {
+            background-color: #D3D3D3;
+        }
+
+        tr.summary-row td {
+            font-weight: bold;
+        }
+
+        /* Medals */
+        .medal {
+            font-size: 1.2em;
+        }
+
+        /* Sortable Header and Arrow Styling */
+        .sortable-header {
+            position: relative;
+            padding-left: 20px;
+            /* Create space for arrows */
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        /* Arrow and Sorting Styles */
+        .arrow-container {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .sort-arrow {
+            border: solid black;
+            border-width: 0 3px 3px 0;
+            padding: 2px;
+            margin: 1px 0;
+            opacity: 0.5;
+        }
+
+        .sort-arrow-up {
+            transform: rotate(-135deg);
+            opacity: 0.5;
+        }
+
+        .sort-arrow-down {
+            transform: rotate(45deg);
+            opacity: 0.5;
+        }
+
+        .sortable-header.sort-asc .sort-arrow-up,
+        .sortable-header.sort-desc .sort-arrow-down {
+            opacity: 1;
+            background-color: black;
         }
 
         /* Highlight rows */
@@ -221,14 +283,62 @@
             <table id="lottery-table">
                 <thead>
                     <tr>
-                        <th class="sortable">מספר הגרלה</th>
-                        <th class="sortable">יישוב</th>
-                        <th class="sortable">קבלן</th>
-                        <th class="sortable">דירות בהגרלה</th>
-                        <th class="sortable">נרשמים בהגרלה</th>
-                        <th class="sortable">מחיר למטר</th>
-                        <th class="sortable">מענק</th>
-                        <th class="sortable">סיכויי זכייה</th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            מספר הגרלה
+                        </th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            יישוב
+                        </th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            קבלן
+                        </th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            דירות בהגרלה
+                        </th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            נרשמים בהגרלה
+                        </th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            מחיר למטר
+                        </th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            מענק
+                        </th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            סיכויי זכייה
+                        </th>
                         <th>הערות</th>
                     </tr>
                 </thead>
@@ -245,11 +355,41 @@
             <table id="summary-table">
                 <thead>
                     <tr>
-                        <th class="sortable">יישוב</th>
-                        <th class="sortable">דירות בהגרלה</th>
-                        <th class="sortable">נרשמים בהגרלה</th>
-                        <th class="sortable">ממוצע מחיר למטר</th>
-                        <th class="sortable">סיכויי זכייה</th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            יישוב
+                        </th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            דירות בהגרלה
+                        </th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            נרשמים בהגרלה
+                        </th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            ממוצע מחיר למטר
+                        </th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            סיכויי זכייה
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
@@ -264,4 +404,5 @@
     <!-- JavaScript for Functionality -->
     <script src="script.js"></script>
 </body>
+
 </html>

@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
   const tableBody = document.querySelector('#lottery-table tbody');
   const summaryTableBody = document.querySelector('#summary-table tbody');
-  const headers = document.querySelectorAll('th.sortable');
+  const headers = document.querySelectorAll('.sortable-header');
   const summaryHeaders = document.querySelectorAll('#summary-table th.sortable');
   const applyFilterButton = document.getElementById('apply-filter');
   const resetButton = document.getElementById('reset-button');
@@ -9,7 +9,13 @@ document.addEventListener('DOMContentLoaded', function () {
   const toolbar = document.getElementById('toolbar');
   const tabButtons = document.querySelectorAll('.tab-button');
   const tabContents = document.querySelectorAll('.tab-content');
-  let activeSort = { column: null, ascending: true };
+  const SortState = {
+    ASCENDING: 'asc',
+    DESCENDING: 'desc',
+    NEUTRAL: 'neutral',
+  };
+  let activeSortAllData = { column: null, state: SortState.NEUTRAL };
+  let activeSortSummary = { column: null, state: SortState.NEUTRAL };
   let activeFilters = {};
   const dataUrl = '/data';
   let originalData = [];
@@ -23,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function () {
       tabContents.forEach(content => content.classList.remove('active'));
       document.getElementById(targetTab).classList.add('active');
       this.classList.add('active');
-      
+
       // Show toolbar, search, and reset buttons only in "All Data" tab
       if (targetTab === 'all-data') {
         toolbar.style.display = 'flex';
@@ -207,42 +213,77 @@ document.addEventListener('DOMContentLoaded', function () {
     resetButton.style.display = 'inline-block';
   }
 
-  // Sorting logic for All Data and Summary tables
   headers.forEach((header, index) => {
     header.addEventListener('click', () => {
-      const isNumeric = index !== 1 && index !== 2 && index !== 8;
-      sortTable(tableBody, index, isNumeric);
-      updateSummaryBar();
+      // Determine next state
+      const currentSortState = activeSortAllData.column === index ? activeSortAllData.state : SortState.NEUTRAL;
+      const nextState = getNextSortState(currentSortState);
+
+      // Reset all headers' classes
+      headers.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+      if (nextState !== SortState.NEUTRAL) {
+        header.classList.add(nextState === SortState.ASCENDING ? 'sort-asc' : 'sort-desc');
+      }
+
+      // Update active sort state
+      activeSortAllData = { column: index, state: nextState };
+      // Perform sorting if not neutral
+      if (nextState === SortState.NEUTRAL) {
+        populateTable(originalData); // Reset to initial unsorted state
+      } else {
+        const isAscending = nextState === SortState.ASCENDING;
+        // sortTable(index, isAscending);
+        sortTable(tableBody, index, isAscending);
+      }
     });
   });
 
+
+  // Set up sorting for Summary Table
   summaryHeaders.forEach((header, index) => {
     header.addEventListener('click', () => {
-      const isNumeric = index !== 0; // Assume all except city column are numeric
-      sortTable(summaryTableBody, index, isNumeric);
+      const currentSortState = activeSortSummary.column === index ? activeSortSummary.state : SortState.NEUTRAL;
+      const nextState = getNextSortState(currentSortState);
+
+      summaryHeaders.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+      if (nextState !== SortState.NEUTRAL) {
+        header.classList.add(nextState === SortState.ASCENDING ? 'sort-asc' : 'sort-desc');
+      }
+
+      activeSortSummary = { column: index, state: nextState };
+      if (nextState === SortState.NEUTRAL) {
+        renderSummaryTable(citySummaryData);
+      } else {
+        const isAscending = nextState === SortState.ASCENDING;
+        sortTable(summaryTableBody, index, isAscending);
+      }
     });
   });
 
-  function sortTable(tableBody, columnIndex, isNumeric) {
-    const rows = Array.from(tableBody.querySelectorAll('tr'));
-    const ascending = !(activeSort.column === columnIndex && activeSort.ascending);
-    activeSort = { column: columnIndex, ascending };
+  function getNextSortState(currentState) {
+    switch (currentState) {
+      case SortState.NEUTRAL:
+        return SortState.ASCENDING;
+      case SortState.ASCENDING:
+        return SortState.DESCENDING;
+      case SortState.DESCENDING:
+        return SortState.NEUTRAL;
+      default:
+        return SortState.NEUTRAL;
+    }
+  }
 
+  function sortTable(tableBody, columnIndex, isAscending) {
+    const rows = Array.from(tableBody.querySelectorAll('tr'));
     rows.sort((rowA, rowB) => {
-      const cellA = rowA.cells[columnIndex].textContent.trim();
-      const cellB = rowB.cells[columnIndex].textContent.trim();
-      let a = cellA, b = cellB;
-      if (isNumeric) {
-        a = parseFloat(cellA.replace(/[₪,%]/g, ''));
-        b = parseFloat(cellB.replace(/[₪,%]/g, ''));
-      }
-      return (a < b ? -1 : a > b ? 1 : 0) * (ascending ? 1 : -1);
+      const a = rowA.cells[columnIndex].textContent.trim();
+      const b = rowB.cells[columnIndex].textContent.trim();
+      return (a > b ? 1 : a < b ? -1 : 0) * (isAscending ? 1 : -1);
     });
 
     tableBody.innerHTML = '';
     rows.forEach(row => tableBody.appendChild(row));
   }
-
   // Update summary bar
   function updateSummaryBar() {
     summaryBar.innerHTML = '';
