@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const applyFilterButton = document.getElementById('apply-filter');
   const resetButton = document.getElementById('reset-button');
   const summaryBar = document.getElementById('summary-bar');
+  const toolbar = document.getElementById('toolbar');
   const tabButtons = document.querySelectorAll('.tab-button');
   const tabContents = document.querySelectorAll('.tab-content');
   let activeSort = { column: null, ascending: true };
@@ -63,14 +64,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
       const originalDataSortedByChances = [...originalData].sort((a, b) => b.winningChances - a.winningChances);
 
-      // // Sort by winning chances and add medals to top 3 for the "All Data" table
-      // originalData.sort((a, b) => {
-      //   const chanceA = a.TotalSubscribers > 0 ? a.LotteryApparmentsNum / a.TotalSubscribers : 0;
-      //   const chanceB = b.TotalSubscribers > 0 ? b.LotteryApparmentsNum / b.TotalSubscribers : 0;
-      //   return chanceB - chanceA;
-      // });
-
-
       // Add medals to top 3 in originalData based on sorted winning chances
       originalDataSortedByChances.forEach((item, index) => {
         const originalItem = originalData.find(origItem => origItem.LotteryNumber === item.LotteryNumber);
@@ -79,15 +72,6 @@ document.addEventListener('DOMContentLoaded', function () {
         else if (index === 2) originalItem.medal = '🥉';
         else originalItem.medal = '';
       });
-
-      // // Add medals to the top 3 entries with the highest chances
-      // originalData = originalData.map((item, index) => {
-      //   if (index === 0) item.medal = '🥇';
-      //   else if (index === 1) item.medal = '🥈';
-      //   else if (index === 2) item.medal = '🥉';
-      //   else item.medal = '';
-      //   return item;
-      // });
 
       populateTable(originalData);
       populateSummaryData(originalData);
@@ -98,7 +82,6 @@ document.addEventListener('DOMContentLoaded', function () {
   function populateTable(data) {
     tableBody.innerHTML = "";  // Clear existing rows
     data.forEach(item => {
-      // Display the calculated winning chances and medals if available
       const chances = item.winningChances.toFixed(3) + '%';
       const row = document.createElement('tr');
       row.innerHTML = `
