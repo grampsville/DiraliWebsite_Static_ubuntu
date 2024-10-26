@@ -1,84 +1,267 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dirali</title>
-  <style>
-    body {
-      padding: 10px;
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      direction: rtl;
-      text-align: center;
-    }
-    h1 {
-      font-size: 16px;
-      color: #333;
-    }
-    table {
-      margin: 0 auto;
-      border-collapse: collapse;
-      background-color: #fff;
-      border: 1px solid #ccc;
-      width: 100%;
-      max-width: 900px;
-    }
-    th, td {
-      padding: 6px;
-      text-align: center;
-      border: 1px solid #ddd;
-      font-size: 12px;
-    }
-    th {
-      background-color: #f2f2f2;
-      font-weight: bold;
-    }
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
-    }
-    tr:hover {
-      background-color: #f1f1f1;
-    }
-    .highlight {
-      color: #4CAF50;
-      font-weight: bold;
-    }
-    .celebration {
-      color: #FF5722;
-      font-weight: bold;
-    }
-    .message {
-      margin-top: 20px;
-      font-weight: bold;
-    }
-    .message a {
-      color: blue;
-      text-decoration: underline;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>דירה לי - כל הנתונים של הגרלות דירה בהנחה, במקום אחד</title>
+    <style>
+        /* Basic Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Body Styling */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Title Styling */
+        h1 {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #6DADE1;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* Tabs */
+        .tab-container {
+            display: flex;
+            width: 100%;
+            max-width: 1000px;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #6DADE1;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 10px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: bold;
+            color: #6DADE1;
+            border: none;
+            background-color: transparent;
+        }
+
+        .tab-button.active {
+            background-color: #58E0A5;
+            color: #FFFFFF;
+        }
+
+        .tab-content {
+            display: none;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Toolbar and Filters */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .toolbar .filter {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .filter-label {
+            margin-right: 5px;
+        }
+
+        .toolbar input,
+        .toolbar select {
+            padding: 5px;
+            border: 1px solid #D3D3D3;
+            border-radius: 4px;
+        }
+
+        #apply-filter,
+        #reset-button {
+            padding: 5px 10px;
+            background-color: #6DADE1;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        #reset-button {
+            display: none;
+        }
+
+        .summary-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .summary-card {
+            background-color: #D3D3D3;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+        }
+
+        .remove-filter {
+            margin-left: 5px;
+            color: red;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Table Styling */
+        .table-container {
+            width: 100%;
+            max-width: 1000px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+            border-radius: 8px;
+            background-color: #FFFFFF;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #FFFFFF;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: center;
+            border-bottom: 1px solid #D3D3D3;
+        }
+
+        th {
+            background-color: #6DADE1;
+            color: #FFFFFF;
+            cursor: pointer;
+        }
+
+        th.sortable:hover {
+            background-color: #58E0A5;
+        }
+
+        /* Highlight rows */
+        tr.summary-row {
+            background-color: #D3D3D3;
+        }
+
+        tr.summary-row td {
+            font-weight: bold;
+        }
+
+        /* Medals */
+        .medal {
+            font-size: 1.2em;
+        }
+    </style>
 </head>
+
 <body>
-  <h1>תוצאות הגרלות</h1>
-  <div id="message" class="message"></div>
-  <table id="lottery-table">
-    <thead>
-      <tr>
-        <th>מספר הגרלה</th>
-        <th>יישוב</th>
-        <th>קבלן</th>
-        <th>דירות בהגרלה</th>
-        <th>נרשמים בהגרלה</th>
-        <th>מחיר למטר</th>
-        <th>מענק</th>
-        <th>סיכויי זכיה</th>
-        <th>הערות</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- Rows will be dynamically added here -->
-    </tbody>
-  </table>
-  <script src="script.js"></script>
+    <h1>דירה לי - כל הנתונים של הגרלות דירה בהנחה, במקום אחד</h1>
+
+    <!-- Tab Navigation -->
+    <div class="tab-container">
+        <button class="tab-button active" data-tab="all-data">נתונים מלאים</button>
+        <button class="tab-button" data-tab="summary-data">רק נתוני סיכום</button>
+    </div>
+
+    <!-- Filter Toolbar (only in All Data tab) -->
+    <div id="toolbar" class="toolbar">
+        <div class="filter">
+            <span class="filter-label">יישוב:</span>
+            <select id="city-filter"></select>
+        </div>
+        <div class="filter">
+            <span class="filter-label">מחיר למטר:</span>
+            <input type="number" id="price-min" placeholder="החל מ-">
+            <input type="number" id="price-max" placeholder="עד-">
+        </div>
+        <div class="filter">
+            <span class="filter-label">סיכויי זכייה:</span>
+            <input type="number" id="chances-min" placeholder="החל מ-">
+        </div>
+        <button id="apply-filter">חיפוש</button>
+        <button id="reset-button">ניקוי</button>
+    </div>
+
+    <!-- Summary Bar -->
+    <div id="summary-bar" class="summary-bar"></div>
+
+    <!-- Tab Contents -->
+    <div id="all-data" class="tab-content active">
+        <!-- All Data Table -->
+        <div class="table-container">
+            <table id="lottery-table">
+                <thead>
+                    <tr>
+                        <th class="sortable">מספר הגרלה</th>
+                        <th class="sortable">יישוב</th>
+                        <th class="sortable">קבלן</th>
+                        <th class="sortable">דירות בהגרלה</th>
+                        <th class="sortable">נרשמים בהגרלה</th>
+                        <th class="sortable">מחיר למטר</th>
+                        <th class="sortable">מענק</th>
+                        <th class="sortable">סיכויי זכייה</th>
+                        <th>הערות</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Table rows will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="summary-data" class="tab-content">
+        <!-- Summary Data Table -->
+        <div class="table-container">
+            <table id="summary-table">
+                <thead>
+                    <tr>
+                        <th class="sortable">יישוב</th>
+                        <th class="sortable">דירות בהגרלה</th>
+                        <th class="sortable">נרשמים בהגרלה</th>
+                        <th class="sortable">ממוצע מחיר למטר</th>
+                        <th class="sortable">סיכויי זכייה</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Summary rows will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="message"></div>
+
+    <!-- JavaScript for Functionality -->
+    <script src="script.js"></script>
 </body>
 </html>
