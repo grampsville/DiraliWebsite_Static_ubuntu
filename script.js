@@ -8,7 +8,16 @@ document.addEventListener('DOMContentLoaded', function () {
   const summaryBar = document.getElementById('summary-bar');
   const toolbar = document.getElementById('toolbar');
   const tabButtons = document.querySelectorAll('.tab-button');
-  const tabContents = document.querySelectorAll('.tab-content');
+  const tabContents = document.querySelectorAll('.tab-content');// Add "Enter" key event listeners to filter inputs
+  document.querySelectorAll('#price-min, #price-max, #chances-min, #city-filter').forEach(input => {
+    input.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();  // Prevents any default form action
+        // applyFiltersAndSort();  // Apply filters when "Enter" is pressed
+        applyFilterButton.click();  // Simulates a button click to apply filters
+      }
+    });
+  });
   const SortState = {
     ASCENDING: 'asc',
     DESCENDING: 'desc',
@@ -284,9 +293,11 @@ document.addEventListener('DOMContentLoaded', function () {
     tableBody.innerHTML = '';
     rows.forEach(row => tableBody.appendChild(row));
   }
-  // Update summary bar
+  // Update summary bar to show active filters and sorting
   function updateSummaryBar() {
-    summaryBar.innerHTML = '';
+    summaryBar.innerHTML = '';  // Clear the summary bar
+
+    // Display active filters with removable X
     for (const key in activeFilters) {
       const filterCard = document.createElement('div');
       filterCard.classList.add('summary-card');
@@ -294,29 +305,38 @@ document.addEventListener('DOMContentLoaded', function () {
       summaryBar.appendChild(filterCard);
     }
 
-    if (activeSort.column !== null) {
+    // Display active sort indicator, if any
+    if (activeSortAllData.column !== null) {
       const sortCard = document.createElement('div');
       sortCard.classList.add('summary-card');
-      const sortDirection = activeSort.ascending ? 'עולה' : 'יורד';
-      sortCard.innerHTML = `${headers[activeSort.column].textContent}: ${sortDirection} <span class="remove-filter" data-sort="true">×</span>`;
+      const sortDirection = activeSortAllData.state === SortState.ASCENDING ? 'עולה' : 'יורד';
+      sortCard.innerHTML = `${headers[activeSortAllData.column].textContent}: ${sortDirection} <span class="remove-filter" data-sort="true">×</span>`;
       summaryBar.appendChild(sortCard);
     }
 
+    // Set up event listeners for filter removal
     document.querySelectorAll('.remove-filter').forEach(button => {
       button.addEventListener('click', () => {
-        if (button.dataset.sort) {
-          activeSort = { column: null, ascending: true };
-        } else {
-          delete activeFilters[button.dataset.filter];
+        const filterKey = button.dataset.filter;
+        if (filterKey) {
+          delete activeFilters[filterKey];  // Remove specific filter
+        } else if (button.dataset.sort) {
+          activeSortAllData = { column: null, state: SortState.NEUTRAL };  // Reset sorting
         }
-        applyFiltersAndSort();
+        applyFiltersAndSort();  // Reapply filters and sorting
       });
     });
   }
 
+  // Apply active filters and sort state to data
   function applyFiltersAndSort() {
-    let filteredData = [...originalData];
-    if (activeFilters['city']) filteredData = filteredData.filter(item => item.CityDescription === activeFilters['city'].split(': ')[1]);
+    let filteredData = [...originalData];  // Start with all data
+
+    // Apply each filter conditionally
+    if (activeFilters['city']) {
+      const city = activeFilters['city'].split(': ')[1];
+      filteredData = filteredData.filter(item => item.CityDescription === city);
+    }
     if (activeFilters['price']) {
       const [min, max] = activeFilters['price'].match(/\d+/g).map(Number);
       filteredData = filteredData.filter(item => item.PricePerUnit >= min && item.PricePerUnit <= max);
@@ -325,8 +345,14 @@ document.addEventListener('DOMContentLoaded', function () {
       const min = parseFloat(activeFilters['chances'].match(/\d+/)[0]);
       filteredData = filteredData.filter(item => (item.LotteryApparmentsNum / item.TotalSubscribers) * 100 >= min);
     }
-    populateTable(filteredData);
-    if (activeSort.column !== null) sortTable(tableBody, activeSort.column, activeSort.column !== 1 && activeSort.column !== 2 && activeSort.column !== 8);
-    updateSummaryBar();
+
+    // Apply sorting if there’s an active sort column
+    if (activeSortAllData.column !== null) {
+      const isAscending = activeSortAllData.state === SortState.ASCENDING;
+      sortTable(tableBody, activeSortAllData.column, isAscending);
+    }
+
+    populateTable(filteredData);  // Update table with filtered data
+    updateSummaryBar();  // Update summary bar to reflect current filters
   }
 });
