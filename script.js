@@ -9,6 +9,34 @@ document.addEventListener('DOMContentLoaded', function () {
   const toolbar = document.getElementById('toolbar');
   const tabButtons = document.querySelectorAll('.tab-button');
   const tabContents = document.querySelectorAll('.tab-content');// Add "Enter" key event listeners to filter inputs
+
+  // Define column types as an object for easy reference
+  const columnTypes = {
+    LotteryNumber: 'number',
+    CityDescription: 'string',
+    ContractorDescription: 'string',
+    LotteryApparmentsNum: 'number',
+    TotalSubscribers: 'number',
+    PricePerUnit: 'number',
+    GrantSize: 'number',
+    winningChances: 'number',
+    IsReligious: 'string'
+  };
+
+  // Map column indices to column names
+  const columnNames = [
+    'LotteryNumber',
+    'CityDescription',
+    'ContractorDescription',
+    'LotteryApparmentsNum',
+    'TotalSubscribers',
+    'PricePerUnit',
+    'GrantSize',
+    'winningChances',
+    'IsReligious'
+  ];
+
+  // Add "Enter" key event listeners to filter inputs
   document.querySelectorAll('#price-min, #price-max, #chances-min, #city-filter').forEach(input => {
     input.addEventListener('keydown', function(event) {
       if (event.key === 'Enter') {
@@ -23,6 +51,7 @@ document.addEventListener('DOMContentLoaded', function () {
     DESCENDING: 'desc',
     NEUTRAL: 'neutral',
   };
+  
   let activeSortAllData = { column: null, state: SortState.NEUTRAL };
   let activeSortSummary = { column: null, state: SortState.NEUTRAL };
   let activeFilters = {};
@@ -39,14 +68,8 @@ document.addEventListener('DOMContentLoaded', function () {
       document.getElementById(targetTab).classList.add('active');
       this.classList.add('active');
 
-      // Show toolbar, search, and reset buttons only in "All Data" tab
-      if (targetTab === 'all-data') {
-        toolbar.style.display = 'flex';
-        resetButton.style.display = 'inline-block';
-      } else {
-        toolbar.style.display = 'none';
-        resetButton.style.display = 'none';
-      }
+      toolbar.style.display = targetTab === 'all-data' ? 'flex' : 'none';
+      resetButton.style.display = targetTab === 'all-data' ? 'inline-block' : 'none';
     });
   });
 
@@ -82,10 +105,7 @@ document.addEventListener('DOMContentLoaded', function () {
       // Add medals to top 3 in originalData based on sorted winning chances
       originalDataSortedByChances.forEach((item, index) => {
         const originalItem = originalData.find(origItem => origItem.LotteryNumber === item.LotteryNumber);
-        if (index === 0) originalItem.medal = '🥇';
-        else if (index === 1) originalItem.medal = '🥈';
-        else if (index === 2) originalItem.medal = '🥉';
-        else originalItem.medal = '';
+        originalItem.medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
       });
 
       populateTable(originalData);
@@ -103,9 +123,9 @@ document.addEventListener('DOMContentLoaded', function () {
               <td>${item.LotteryNumber}</td>
               <td>${item.CityDescription}</td>
               <td>${item.ContractorDescription}</td>
-              <td>${item.LotteryApparmentsNum}</td>
-              <td>${item.TotalSubscribers}</td>
-              <td>₪${item.PricePerUnit.toLocaleString()}</td>
+              <td>${item.LotteryApparmentsNum.toLocaleString()}</td>
+              <td>${item.TotalSubscribers.toLocaleString()}</td>
+              <td>₪${item.PricePerUnit.toFixed(2).toLocaleString()}</td>
               <td>₪${item.GrantSize.toLocaleString()}</td>
               <td>${chances} ${item.medal}</td>
               <td>${item.IsReligious ? 'צביון חרדי' : ''}</td>
@@ -167,6 +187,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+
   // Populate city filter options
   function populateCityFilterOptions(data) {
     const cityFilter = document.getElementById('city-filter');
@@ -222,6 +243,7 @@ document.addEventListener('DOMContentLoaded', function () {
     resetButton.style.display = 'inline-block';
   }
 
+  // Sorting functionality for each header
   headers.forEach((header, index) => {
     header.addEventListener('click', () => {
       // Determine next state
@@ -247,7 +269,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-
   // Set up sorting for Summary Table
   summaryHeaders.forEach((header, index) => {
     header.addEventListener('click', () => {
@@ -269,30 +290,42 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
+  // Helper function to cycle through sort states
   function getNextSortState(currentState) {
     switch (currentState) {
-      case SortState.NEUTRAL:
-        return SortState.ASCENDING;
-      case SortState.ASCENDING:
-        return SortState.DESCENDING;
-      case SortState.DESCENDING:
-        return SortState.NEUTRAL;
-      default:
-        return SortState.NEUTRAL;
+      case SortState.NEUTRAL: return SortState.ASCENDING;
+      case SortState.ASCENDING: return SortState.DESCENDING;
+      case SortState.DESCENDING: return SortState.NEUTRAL;
+      default: return SortState.NEUTRAL;
     }
   }
 
+
+  
+  // Sorting function that considers data types
   function sortTable(tableBody, columnIndex, isAscending) {
     const rows = Array.from(tableBody.querySelectorAll('tr'));
+    const columnName = columnNames[columnIndex];
+    const columnType = columnTypes[columnName];
+
     rows.sort((rowA, rowB) => {
-      const a = rowA.cells[columnIndex].textContent.trim();
-      const b = rowB.cells[columnIndex].textContent.trim();
-      return (a > b ? 1 : a < b ? -1 : 0) * (isAscending ? 1 : -1);
+      let a = rowA.cells[columnIndex].textContent.trim();
+      let b = rowB.cells[columnIndex].textContent.trim();
+
+      if (columnType === 'number') {
+        a = parseFloat(a.replace(/[^\d.-]/g, ''));
+        b = parseFloat(b.replace(/[^\d.-]/g, ''));
+      }
+
+      if (a < b) return isAscending ? -1 : 1;
+      if (a > b) return isAscending ? 1 : -1;
+      return 0;
     });
 
     tableBody.innerHTML = '';
     rows.forEach(row => tableBody.appendChild(row));
   }
+
   // Update summary bar to show active filters and sorting
   function updateSummaryBar() {
     summaryBar.innerHTML = '';  // Clear the summary bar
