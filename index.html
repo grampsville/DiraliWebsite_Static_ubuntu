@@ -87,7 +87,12 @@
             margin-bottom: 10px;
             width: 100%;
             max-width: 1000px;
+
+            flex-direction: column;
+            align-items: right;
+            align-items: start;
         }
+
 
         .toolbar .filter {
             display: flex;
@@ -314,6 +319,79 @@
             height: 16px;
             /* Example styling for logo, adjust based on actual logo size */
         }
+
+        /* For small devices (600px and below) */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            /* Adjust title font size */
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            /* Tab Navigation  */
+            .tab-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .tab-button {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+
+                flex: none;
+                /* width: 100%; */
+                text-align: center;
+            }
+
+            /* Toolbar adjustments */
+            .toolbar {
+                flex-direction: column;
+                align-items: right;
+                align-items: start;
+            }
+
+            .toolbar input,
+            .toolbar select {
+                width: 100%;
+            }
+
+            .filter {
+                width: 100%;
+                align-items: right;
+                align-items: start;
+                margin-bottom: 10px;
+            }
+
+            .table-container {
+                width: 100%;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                /* Smooth scrolling on iOS */
+            }
+
+            table,
+            th,
+            td {
+                font-size: 0.8rem;
+                padding: 6px;
+            }
+
+            /* Adjust buttons */
+            #apply-filter,
+            #reset-button {
+                padding: 8px 10px;
+                font-size: 0.8rem;
+                margin-bottom: 5px;
+            }
+
+            /* Adjust footer font size */
+            footer {
+                font-size: 0.75em;
+            }
     </style>
 </head>
 
@@ -339,15 +417,19 @@
         </div>
         <div class="filter">
             <span class="filter-label">מחיר למטר:</span>
-            <input type="number" id="price-min" placeholder="החל מ-">
-            <input type="number" id="price-max" placeholder="עד-">
+            <div>
+                <input type="number" id="price-min" placeholder="החל מ-">
+                <input type="number" id="price-max" placeholder="עד-">
+            </div>
         </div>
         <div class="filter">
             <span class="filter-label">סיכויי זכייה:</span>
             <input type="number" id="chances-min" placeholder="החל מ-">
         </div>
-        <button id="apply-filter">חיפוש</button>
-        <button id="reset-button">ניקוי</button>
+        <div>
+            <button id="apply-filter">חיפוש</button>
+            <button id="reset-button">ניקוי</button>
+        </div>
     </div>
 
     <!-- Summary Bar -->
@@ -480,10 +562,18 @@
 
     <!-- JavaScript for Functionality -->
     <script src="script.js"></script>
-    <footer style="margin-top: 20px; padding: 15px; background-color: #f9f9f9; text-align: center; font-size: 0.9em; color: #555;">
+    <footer
+        style="margin-top: 20px; padding: 15px; background-color: #f9f9f9; text-align: center; font-size: 0.9em; color: #555;">
         <p>
-            המידע המוצג באתר זה, לרבות חישובי סיכויי הזכייה בהתאם ליישובים, מסופק למטרות מידע כללי בלבד ואין לראות בו כמידע מדויק או מחייב. חישובי סיכויי הזכייה מבוססים על שקלול של מספר הדירות בהגרלה ומספר המשתתפים המרבי בהגרלה ביישוב, תוך הנחה כי המשתתפים בהגרלות השונות ביישוב זהים. ייתכנו הבדלים בין החישובים המוצגים באתר לבין הסיכויים בפועל. כל משתמש נדרש לאמת את הנתונים בעצמו ולהימנע מהסתמכות בלעדית על המידע המוצג באתר זה. השימוש במידע זה נעשה באחריות המשתמש בלבד, והנהלת האתר אינה אחראית לכל נזק או הפסד שעלול להיגרם כתוצאה משימוש או הסתמכות על המידע. האתר לא מהווה תחליף לייעוץ משפטי ו/או התייעצות מול גורמים שמנהלים את האתר ו/או ההגרלות הרשמיים.
+            המידע המוצג באתר זה, לרבות חישובי סיכויי הזכייה בהתאם ליישובים, מסופק למטרות מידע כללי בלבד ואין לראות בו
+            כמידע מדויק או מחייב. חישובי סיכויי הזכייה מבוססים על שקלול של מספר הדירות בהגרלה ומספר המשתתפים המרבי
+            בהגרלה ביישוב, תוך הנחה כי המשתתפים בהגרלות השונות ביישוב זהים. ייתכנו הבדלים בין החישובים המוצגים באתר לבין
+            הסיכויים בפועל. כל משתמש נדרש לאמת את הנתונים בעצמו ולהימנע מהסתמכות בלעדית על המידע המוצג באתר זה. השימוש
+            במידע זה נעשה באחריות המשתמש בלבד, והנהלת האתר אינה אחראית לכל נזק או הפסד שעלול להיגרם כתוצאה משימוש או
+            הסתמכות על המידע. האתר לא מהווה תחליף לייעוץ משפטי ו/או התייעצות מול גורמים שמנהלים את האתר ו/או ההגרלות
+            הרשמיים.
         </p>
     </footer>
 </body>
+
 </html>

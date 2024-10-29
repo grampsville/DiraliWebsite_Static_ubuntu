@@ -1,17 +1,17 @@
 document.addEventListener('DOMContentLoaded', function () {
-  const tableBody = document.querySelector('#lottery-table tbody');
+  const allDataTableBody = document.querySelector('#lottery-table tbody');
   const summaryTableBody = document.querySelector('#summary-table tbody');
   const headers = document.querySelectorAll('.sortable-header');
   const summaryHeaders = document.querySelectorAll('#summary-table th.sortable');
   const applyFilterButton = document.getElementById('apply-filter');
   const resetButton = document.getElementById('reset-button');
-  const summaryBar = document.getElementById('summary-bar');
+  const filterSummaryBar = document.getElementById('summary-bar');
   const toolbar = document.getElementById('toolbar');
   const tabButtons = document.querySelectorAll('.tab-button');
   const tabContents = document.querySelectorAll('.tab-content');// Add "Enter" key event listeners to filter inputs
 
   // Define column types as an object for easy reference
-  const columnTypes = {
+  const allDataTableColumnTypes = {
     LotteryNumber: 'number',
     CityDescription: 'string',
     ContractorDescription: 'string',
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
   };
 
   // Map column indices to column names
-  const columnNames = [
+  const allDataTableColumnNames = [
     'LotteryNumber',
     'CityDescription',
     'ContractorDescription',
@@ -35,10 +35,26 @@ document.addEventListener('DOMContentLoaded', function () {
     'winningChances',
     'IsReligious'
   ];
-
+  
+  const summaryDataTableColumnTypes = {
+    city: 'string',
+    totalLotteryApparmentsNum: 'number',
+    maxSubscribers: 'number',
+    avgPricePerUnit: 'number',
+    cityChances: 'number'
+  };
+  // Map column indices to column names
+  const summaryDataTableColumnNames = [
+    'city',
+    'totalLotteryApparmentsNum',
+    'maxSubscribers',
+    'avgPricePerUnit',
+    'cityChances'
+  ];
+  
   // Add "Enter" key event listeners to filter inputs
   document.querySelectorAll('#price-min, #price-max, #chances-min, #city-filter').forEach(input => {
-    input.addEventListener('keydown', function(event) {
+    input.addEventListener('keydown', function (event) {
       if (event.key === 'Enter') {
         event.preventDefault();  // Prevents any default form action
         // applyFiltersAndSort();  // Apply filters when "Enter" is pressed
@@ -51,9 +67,9 @@ document.addEventListener('DOMContentLoaded', function () {
     DESCENDING: 'desc',
     NEUTRAL: 'neutral',
   };
-  
+
   let activeSortAllData = { column: null, state: SortState.NEUTRAL };
-  let activeSortSummary = { column: null, state: SortState.NEUTRAL };
+  let activeSortSummaryData = { column: null, state: SortState.NEUTRAL };
   let activeFilters = {};
   const dataUrl = '/data';
   let originalData = [];
@@ -69,9 +85,29 @@ document.addEventListener('DOMContentLoaded', function () {
       this.classList.add('active');
 
       toolbar.style.display = targetTab === 'all-data' ? 'flex' : 'none';
-      resetButton.style.display = targetTab === 'all-data' ? 'inline-block' : 'none';
+      // resetButton.style.display = targetTab === 'all-data' ? 'inline-block' : 'none';
+
+      // Show toolbar and filter bar only in "All Data" tab
+      switch (targetTab) {
+        case 'all-data':
+          toolbar.style.display = 'flex';
+          filterSummaryBar.style.display = 'flex';
+          resetButton.style.display = 'inline-block';
+          break;
+        case 'summary-data':
+          toolbar.style.display = 'none';
+          filterSummaryBar.style.display = 'none';
+          resetButton.style.display = 'none';
+          break;
+        default:
+          toolbar.style.display = 'none';
+          filterSummaryBar.style.display = 'none';
+          resetButton.style.display = 'none';
+          break;
+      }
     });
   });
+
 
   // Fetch data and initialize tables
   fetch(dataUrl)
@@ -108,14 +144,14 @@ document.addEventListener('DOMContentLoaded', function () {
         originalItem.medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
       });
 
-      populateTable(originalData);
+      renderAllDataTable(originalData);
       populateSummaryData(originalData);
       populateCityFilterOptions(originalData);
     });
 
-  // Populate "All Data" table
-  function populateTable(data) {
-    tableBody.innerHTML = "";  // Clear existing rows
+  // Render "All Data" table
+  function renderAllDataTable(data) {
+    allDataTableBody.innerHTML = "";  // Clear existing rows
     data.forEach(item => {
       const chances = item.winningChances.toFixed(3) + '%';
       const row = document.createElement('tr');
@@ -130,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function () {
               <td>${chances} ${item.medal}</td>
               <td>${item.IsReligious ? 'צביון חרדי' : ''}</td>
           `;
-      tableBody.appendChild(row);
+      allDataTableBody.appendChild(row);
     });
   }
 
@@ -163,11 +199,11 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     citySummaryData.sort((a, b) => b.cityChances - a.cityChances);
-    renderSummaryTable(citySummaryData);
+    renderSummaryDataTable(citySummaryData);
   }
 
   // Render "Summary Data" table with medals for top 3
-  function renderSummaryTable(summaryData) {
+  function renderSummaryDataTable(summaryData) {
     summaryTableBody.innerHTML = "";
     summaryData.forEach((summary, index) => {
       let medal = '';
@@ -177,16 +213,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
       const summaryRow = document.createElement('tr');
       summaryRow.innerHTML = `
-              <td>${summary.city} סה״כ</td>
-              <td>${summary.totalLotteryApparmentsNum}</td>
-              <td>${summary.maxSubscribers}</td>
-              <td>₪${summary.avgPricePerUnit.toLocaleString()}</td>
+              <td>${summary.city}</td>
+              <td>${summary.totalLotteryApparmentsNum.toLocaleString()}</td>
+              <td>${summary.maxSubscribers.toLocaleString()}</td>
+              <td>₪${summary.avgPricePerUnit.toFixed(2).toLocaleString()}</td>
               <td>${summary.cityChances.toFixed(3)}%${medal}</td>
           `;
       summaryTableBody.appendChild(summaryRow);
     });
   }
-
 
   // Populate city filter options
   function populateCityFilterOptions(data) {
@@ -196,7 +231,9 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // Apply filters
-  applyFilterButton.addEventListener('click', () => {
+  applyFilterButton.addEventListener('click', applyFilters);
+
+  function applyFilters() {
     let filteredData = [...originalData];
     activeFilters = {};
 
@@ -222,49 +259,63 @@ document.addEventListener('DOMContentLoaded', function () {
       activeFilters['chances'] = `סיכויי זכייה: ${chancesMin}+`;
     }
 
-    populateTable(filteredData);
-    updateSummaryBar();
+    renderAllDataTable(filteredData);
+    updateFilterBar();
     resetButton.style.display = 'inline-block';
-  });
+  }
 
   // Reset filters and sorting
   resetButton.addEventListener('click', resetFiltersAndSorting);
 
   function resetFiltersAndSorting() {
-    activeSort = { column: null, ascending: true };
+    // Clear sorting classes from headers
+    // if (this.dataset.tab === 'all-data') {
+    //   activeSortAllData = { column: null, state: SortState.NEUTRAL };
+    //   headers.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+    // } else {
+    //   activeSortSummaryData = { column: null, state: SortState.NEUTRAL };
+    //   summaryHeaders.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+    // }
+    // Reset sorting states
+    activeSortAllData = { column: null, state: SortState.NEUTRAL };
+    activeSortSummaryData = { column: null, state: SortState.NEUTRAL };
+    // Clear sorting classes from headers
+    headers.forEach(header => header.classList.remove('sort-asc', 'sort-desc'));
+    summaryHeaders.forEach(header => header.classList.remove('sort-asc', 'sort-desc'));
+
+    // Clear all filters
     activeFilters = {};
+
+    // Reset filter inputs to empty
     document.getElementById('city-filter').value = '';
     document.getElementById('price-min').value = '';
     document.getElementById('price-max').value = '';
     document.getElementById('chances-min').value = '';
-    populateTable(originalData);
-    renderSummaryTable(citySummaryData); // Reset summary table to original
-    updateSummaryBar();
+
+    renderAllDataTable(originalData);
+    renderSummaryDataTable(citySummaryData); // Reset summary table to original
+    updateFilterBar();
     resetButton.style.display = 'inline-block';
   }
 
   // Sorting functionality for each header
   headers.forEach((header, index) => {
     header.addEventListener('click', () => {
-      // Determine next state
-      const currentSortState = activeSortAllData.column === index ? activeSortAllData.state : SortState.NEUTRAL;
-      const nextState = getNextSortState(currentSortState);
+      const isAllDataTabActive = document.getElementById('all-data').classList.contains('active');
+      if (isAllDataTabActive) {
+        // Determine next state
+        const currentSortState = activeSortAllData.column === index ? activeSortAllData.state : SortState.NEUTRAL;
+        const nextState = getNextSortState(currentSortState);
 
-      // Reset all headers' classes
-      headers.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
-      if (nextState !== SortState.NEUTRAL) {
-        header.classList.add(nextState === SortState.ASCENDING ? 'sort-asc' : 'sort-desc');
-      }
+        // Reset all headers' classes
+        headers.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+        if (nextState !== SortState.NEUTRAL) {
+          header.classList.add(nextState === SortState.ASCENDING ? 'sort-asc' : 'sort-desc');
+        }
 
-      // Update active sort state
-      activeSortAllData = { column: index, state: nextState };
-      // Perform sorting if not neutral
-      if (nextState === SortState.NEUTRAL) {
-        populateTable(originalData); // Reset to initial unsorted state
-      } else {
-        const isAscending = nextState === SortState.ASCENDING;
-        // sortTable(index, isAscending);
-        sortTable(tableBody, index, isAscending);
+        activeSortAllData = { column: index, state: nextState };
+
+        applyFiltersAndSort()
       }
     });
   });
@@ -272,20 +323,19 @@ document.addEventListener('DOMContentLoaded', function () {
   // Set up sorting for Summary Table
   summaryHeaders.forEach((header, index) => {
     header.addEventListener('click', () => {
-      const currentSortState = activeSortSummary.column === index ? activeSortSummary.state : SortState.NEUTRAL;
-      const nextState = getNextSortState(currentSortState);
+      const isSummaryDataTabActive = document.getElementById('summary-data').classList.contains('active');
+      if (isSummaryDataTabActive) {
 
-      summaryHeaders.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
-      if (nextState !== SortState.NEUTRAL) {
-        header.classList.add(nextState === SortState.ASCENDING ? 'sort-asc' : 'sort-desc');
-      }
+        const currentSortState = activeSortSummaryData.column === index ? activeSortSummaryData.state : SortState.NEUTRAL;
+        const nextState = getNextSortState(currentSortState);
 
-      activeSortSummary = { column: index, state: nextState };
-      if (nextState === SortState.NEUTRAL) {
-        renderSummaryTable(citySummaryData);
-      } else {
-        const isAscending = nextState === SortState.ASCENDING;
-        sortTable(summaryTableBody, index, isAscending);
+        summaryHeaders.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+        if (nextState !== SortState.NEUTRAL) {
+          header.classList.add(nextState === SortState.ASCENDING ? 'sort-asc' : 'sort-desc');
+        }
+
+        activeSortSummaryData = { column: index, state: nextState };
+        applyFiltersAndSort()
       }
     });
   });
@@ -300,42 +350,36 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-
-  
-  // Sorting function that considers data types
-  function sortTable(tableBody, columnIndex, isAscending) {
-    const rows = Array.from(tableBody.querySelectorAll('tr'));
+  function sortDataByColumn(a, b, columnIndex, isAscending, columnNames, columnTypes) {
     const columnName = columnNames[columnIndex];
     const columnType = columnTypes[columnName];
+    let valA = a[columnName];
+    let valB = b[columnName];
 
-    rows.sort((rowA, rowB) => {
-      let a = rowA.cells[columnIndex].textContent.trim();
-      let b = rowB.cells[columnIndex].textContent.trim();
+    // Adjust for data type in sorting
+    if (columnType === 'number') {
+        valA = parseFloat(valA);
+        valB = parseFloat(valB);
+    } else {
+        valA = valA.toString();
+        valB = valB.toString();
+    }
 
-      if (columnType === 'number') {
-        a = parseFloat(a.replace(/[^\d.-]/g, ''));
-        b = parseFloat(b.replace(/[^\d.-]/g, ''));
-      }
-
-      if (a < b) return isAscending ? -1 : 1;
-      if (a > b) return isAscending ? 1 : -1;
-      return 0;
-    });
-
-    tableBody.innerHTML = '';
-    rows.forEach(row => tableBody.appendChild(row));
-  }
+    if (valA < valB) return isAscending ? -1 : 1;
+    if (valA > valB) return isAscending ? 1 : -1;
+    return 0;
+}
 
   // Update summary bar to show active filters and sorting
-  function updateSummaryBar() {
-    summaryBar.innerHTML = '';  // Clear the summary bar
+  function updateFilterBar() {
+    filterSummaryBar.innerHTML = '';  // Clear the summary bar
 
     // Display active filters with removable X
     for (const key in activeFilters) {
       const filterCard = document.createElement('div');
       filterCard.classList.add('summary-card');
-      filterCard.innerHTML = `${activeFilters[key]} <span class="remove-filter" data-filter="${key}">×</span>`;
-      summaryBar.appendChild(filterCard);
+      filterCard.innerHTML = `${activeFilters[key]} <span class="remove-filter" data-filter="${key}">x</span>`;
+      filterSummaryBar.appendChild(filterCard);
     }
 
     // Display active sort indicator, if any
@@ -344,7 +388,7 @@ document.addEventListener('DOMContentLoaded', function () {
       sortCard.classList.add('summary-card');
       const sortDirection = activeSortAllData.state === SortState.ASCENDING ? 'עולה' : 'יורד';
       sortCard.innerHTML = `${headers[activeSortAllData.column].textContent}: ${sortDirection} <span class="remove-filter" data-sort="true">×</span>`;
-      summaryBar.appendChild(sortCard);
+      filterSummaryBar.appendChild(sortCard);
     }
 
     // Set up event listeners for filter removal
@@ -353,8 +397,17 @@ document.addEventListener('DOMContentLoaded', function () {
         const filterKey = button.dataset.filter;
         if (filterKey) {
           delete activeFilters[filterKey];  // Remove specific filter
-        } else if (button.dataset.sort) {
-          activeSortAllData = { column: null, state: SortState.NEUTRAL };  // Reset sorting
+        } else if (button.dataset.sort) {   // Clear sorting classes from headers in both tables to reset arrow colors to white
+          const isAllDataTabActive = document.getElementById('all-data').classList.contains('active');
+          const isSummaryDataTabActive = document.getElementById('summary-data').classList.contains('active');
+          if(isAllDataTabActive){
+            activeSortAllData = { column: null, state: SortState.NEUTRAL }; 
+            headers.forEach(header => header.classList.remove('sort-asc', 'sort-desc'));
+          } else if (isSummaryDataTabActive){
+            activeSortSummaryData = { column: null, state: SortState.NEUTRAL };
+            summaryHeaders.forEach(header => header.classList.remove('sort-asc', 'sort-desc')); // Reset sorting
+          }
+          summaryHeaders.forEach(header => header.classList.remove('sort-asc', 'sort-desc')); // Reset sorting
         }
         applyFiltersAndSort();  // Reapply filters and sorting
       });
@@ -379,13 +432,24 @@ document.addEventListener('DOMContentLoaded', function () {
       filteredData = filteredData.filter(item => (item.LotteryApparmentsNum / item.TotalSubscribers) * 100 >= min);
     }
 
+    // Check which tab is active and apply sorting only to the active table
+    const isAllDataTabActive = document.getElementById('all-data').classList.contains('active');
+    const isSummaryDataTabActive = document.getElementById('summary-data').classList.contains('active');
     // Apply sorting if there’s an active sort column
-    if (activeSortAllData.column !== null) {
+    if (isAllDataTabActive && activeSortAllData.column !== null) {
       const isAscending = activeSortAllData.state === SortState.ASCENDING;
-      sortTable(tableBody, activeSortAllData.column, isAscending);
+      // sortTable(allDataTableBody, activeSortAllData.column, isAscending);
+      filteredData.sort((a, b) => sortDataByColumn(a, b, activeSortAllData.column, isAscending, allDataTableColumnNames, allDataTableColumnTypes));
+      renderAllDataTable(filteredData);  // Update table with filtered data
+    }
+    // Apply sorting if there’s an active sort column
+    else if (isSummaryDataTabActive && activeSortSummaryData.column !== null) {
+      const isAscending = activeSortSummaryData.state === SortState.ASCENDING;
+      // sortTable(summaryTableBody, activeSortSummaryData.column, isAscending);
+      citySummaryData.sort((a, b) => sortDataByColumn(a, b, activeSortSummaryData.column, isAscending, summaryDataTableColumnNames, summaryDataTableColumnTypes));
+      renderSummaryDataTable(citySummaryData);  // Update table with filtered data
     }
 
-    populateTable(filteredData);  // Update table with filtered data
-    updateSummaryBar();  // Update summary bar to reflect current filters
+    updateFilterBar();  // Update summary bar to reflect current filters
   }
 });
