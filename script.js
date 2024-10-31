@@ -7,6 +7,10 @@ document.addEventListener('DOMContentLoaded', function () {
   const resetButton = document.getElementById('reset-button');
   const filterSummaryBar = document.getElementById('summary-bar');
   const toolbar = document.getElementById('toolbar');
+  const cityFilter = document.getElementById('city-filter');
+  const priceMinInput = document.getElementById('price-min');
+  const priceMaxInput = document.getElementById('price-max');
+  const chancesMinInput = document.getElementById('chances-min');
   const tabButtons = document.querySelectorAll('.tab-button');
   const tabContents = document.querySelectorAll('.tab-content');// Add "Enter" key event listeners to filter inputs
 
@@ -35,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
     'winningChances',
     'IsReligious'
   ];
-  
+
   const summaryDataTableColumnTypes = {
     city: 'string',
     totalLotteryApparmentsNum: 'number',
@@ -51,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function () {
     'avgPricePerUnit',
     'cityChances'
   ];
-  
+
   // Add "Enter" key event listeners to filter inputs
   document.querySelectorAll('#price-min, #price-max, #chances-min, #city-filter').forEach(input => {
     input.addEventListener('keydown', function (event) {
@@ -225,9 +229,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Populate city filter options
   function populateCityFilterOptions(data) {
-    const cityFilter = document.getElementById('city-filter');
     const cities = [...new Set(data.map(item => item.CityDescription))].sort();
-    cityFilter.innerHTML = `<option value="">הכל</option>` + cities.map(city => `<option value="${city}">${city}</option>`).join('');
+    cityFilter.innerHTML = `<option value="">הכל</option>` +
+      cities.map(city => `<option value="${encodeURIComponent(city)}">${city}</option>`).join('');
   }
 
   // Apply filters
@@ -237,20 +241,20 @@ document.addEventListener('DOMContentLoaded', function () {
     let filteredData = [...originalData];
     activeFilters = {};
 
-    const city = document.getElementById('city-filter').value;
+    const city = decodeURIComponent(cityFilter.value);
     if (city) {
       filteredData = filteredData.filter(item => item.CityDescription === city);
       activeFilters['city'] = `יישוב: ${city}`;
     }
 
-    const priceMin = parseFloat(document.getElementById('price-min').value) || 0;
-    const priceMax = parseFloat(document.getElementById('price-max').value) || Infinity;
+    const priceMin = parseFloat(priceMinInput.value) || 0;
+    const priceMax = parseFloat(priceMaxInput.value) || Infinity;
     filteredData = filteredData.filter(item => item.PricePerUnit >= priceMin && item.PricePerUnit <= priceMax);
     if (priceMin || priceMax < Infinity) {
       activeFilters['price'] = `מחיר למטר: ${priceMin} - ${priceMax}`;
     }
 
-    const chancesMin = parseFloat(document.getElementById('chances-min').value) || 0;
+    const chancesMin = parseFloat(chancesMinInput.value) || 0;
     filteredData = filteredData.filter(item => {
       const chances = (item.LotteryApparmentsNum / item.TotalSubscribers) * 100;
       return chances >= chancesMin;
@@ -358,17 +362,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Adjust for data type in sorting
     if (columnType === 'number') {
-        valA = parseFloat(valA);
-        valB = parseFloat(valB);
+      valA = parseFloat(valA);
+      valB = parseFloat(valB);
     } else {
-        valA = valA.toString();
-        valB = valB.toString();
+      valA = valA.toString();
+      valB = valB.toString();
     }
 
     if (valA < valB) return isAscending ? -1 : 1;
     if (valA > valB) return isAscending ? 1 : -1;
     return 0;
-}
+  }
 
   // Update summary bar to show active filters and sorting
   function updateFilterBar() {
@@ -378,7 +382,17 @@ document.addEventListener('DOMContentLoaded', function () {
     for (const key in activeFilters) {
       const filterCard = document.createElement('div');
       filterCard.classList.add('summary-card');
-      filterCard.innerHTML = `${activeFilters[key]} <span class="remove-filter" data-filter="${key}">x</span>`;
+
+      // Use textContent instead of innerHTML for filter text to avoid HTML special character issues
+      filterCard.textContent = activeFilters[key];
+
+      // Add the removable "x" button separately to ensure correct HTML structure
+      const removeSpan = document.createElement('span');
+      removeSpan.classList.add('remove-filter');
+      removeSpan.dataset.filter = key;
+      removeSpan.textContent = ' x';
+      filterCard.appendChild(removeSpan);
+
       filterSummaryBar.appendChild(filterCard);
     }
 
@@ -400,10 +414,10 @@ document.addEventListener('DOMContentLoaded', function () {
         } else if (button.dataset.sort) {   // Clear sorting classes from headers in both tables to reset arrow colors to white
           const isAllDataTabActive = document.getElementById('all-data').classList.contains('active');
           const isSummaryDataTabActive = document.getElementById('summary-data').classList.contains('active');
-          if(isAllDataTabActive){
-            activeSortAllData = { column: null, state: SortState.NEUTRAL }; 
+          if (isAllDataTabActive) {
+            activeSortAllData = { column: null, state: SortState.NEUTRAL };
             headers.forEach(header => header.classList.remove('sort-asc', 'sort-desc'));
-          } else if (isSummaryDataTabActive){
+          } else if (isSummaryDataTabActive) {
             activeSortSummaryData = { column: null, state: SortState.NEUTRAL };
             summaryHeaders.forEach(header => header.classList.remove('sort-asc', 'sort-desc')); // Reset sorting
           }
