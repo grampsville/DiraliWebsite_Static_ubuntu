@@ -151,6 +151,7 @@
 
         /* Table Styling */
         .table-container {
+            display: none; /* Hide by default */
             width: 100%;
             max-width: 1000px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -393,10 +394,47 @@
                 font-size: 0.75em;
             }
         }
+    }
+
+
+
+        /* Skeleton Loader Styling */
+        .skeleton-loader {
+          width: 100%;
+          max-width: 1000px;
+          margin-bottom: 20px;
+        }
+
+        .skeleton-row {
+          height: 40px;
+          background-color: #e0e0e0;
+          margin-bottom: 10px;
+          border-radius: 4px;
+          animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+          0% {
+            background-color: #e0e0e0;
+          }
+          50% {
+            background-color: #f0f0f0;
+          }
+          100% {
+            background-color: #e0e0e0;
+          }
+        }
     </style>
 </head>
 
 <body>
+    <div id="skeleton-loader" class="skeleton-loader">
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </div>
     <h1>דירה לי - כל הנתונים של הגרלות דירה בהנחה, במקום אחד</h1>
 
     <!-- Tab Navigation -->

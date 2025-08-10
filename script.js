@@ -1,6 +1,13 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const loader = document.getElementById('loader');
-    loader.style.display = 'block';
+    const skeletonLoader = document.getElementById('skeleton-loader');
+    const tableContainers = document.querySelectorAll('.table-container');
+
+    // Show skeleton loader and hide table
+    console.log('Showing skeleton loader');
+    skeletonLoader.style.display = 'block';
+    tableContainers.forEach(container => {
+      container.style.display = 'none';
+    });
     const tableBody = document.querySelector('#lottery-table tbody');
     const headers = document.querySelectorAll('th.sortable');
     const applyFilterButton = document.getElementById('apply-filter');
@@ -41,7 +48,11 @@ document.addEventListener('DOMContentLoaded', function () {
             addCitySummaryRows(originalData);
         })
         .finally(() => {
-          loader.style.display = 'none';
+          // Hide skeleton loader and show table
+          skeletonLoader.style.display = 'none';
+          tableContainers.forEach(container => {
+            container.style.display = 'block';
+          });
         });
   
     // Populate table with data
