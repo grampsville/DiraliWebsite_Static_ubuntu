@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
       container.style.display = 'none';
     });
     const tableBody = document.querySelector('#lottery-table tbody');
+    const summaryTableBody = document.querySelector('#summary-table tbody');
     const headers = document.querySelectorAll('th.sortable');
     const applyFilterButton = document.getElementById('apply-filter');
     const resetButton = document.getElementById('reset-button');
@@ -17,6 +18,52 @@ document.addEventListener('DOMContentLoaded', function () {
     let activeFilters = {};
     const dataUrl = '/data';
     let originalData = [];
+
+    // Tab switching
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabButtons.forEach(button => {
+      button.addEventListener('click', function () {
+        const targetTab = this.dataset.tab;
+
+        // Deactivate all tabs and content
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        tabContents.forEach(content => content.classList.remove('active'));
+
+        // Activate the target tab and content
+        this.classList.add('active');
+        const activeTabContent = document.getElementById(targetTab);
+        activeTabContent.classList.add('active');
+
+        // Hide all table containers
+        tableContainers.forEach(container => {
+          container.style.display = 'none';
+        });
+
+        // Show the table container for the active tab
+        const activeTableContainer = activeTabContent.querySelector('.table-container');
+        if (activeTableContainer) {
+          activeTableContainer.style.display = 'block';
+        }
+
+        // If summary tab is active, re-populate summary data
+        if (targetTab === 'summary-data') {
+          populateSummaryData(originalData);
+        }
+
+        // Show/hide toolbar and reset button based on the active tab
+        const toolbar = document.getElementById('toolbar');
+        const resetButton = document.getElementById('reset-button');
+        if (targetTab === 'all-data') {
+          toolbar.style.display = 'flex';
+          resetButton.style.display = 'inline-block';
+        } else {
+          toolbar.style.display = 'none';
+          resetButton.style.display = 'none';
+        }
+      });
+    });
   
     // Fetch data
     const apiUrls = [
@@ -45,24 +92,24 @@ document.addEventListener('DOMContentLoaded', function () {
   
             populateTable(originalData);
             populateCityFilterOptions(originalData);
-            addCitySummaryRows(originalData);
+            populateSummaryData(originalData);
         })
         .finally(() => {
-          // Hide skeleton loader and show table
+          // Hide skeleton loader
           skeletonLoader.style.display = 'none';
-          tableContainers.forEach(container => {
-            container.style.display = 'block';
-          });
+
+          // Simulate a click on the "All Data" tab button to display the initial table
+          document.querySelector('.tab-button[data-tab="all-data"]').click();
         });
   
-    // Populate table with data
+    // Populate "All Data" table
     function populateTable(data) {
-        tableBody.innerHTML = "";
+        tableBody.innerHTML = "";  // Clear existing rows
         data.forEach(item => {
-            const row = document.createElement('tr');
-            const chances = item.TotalSubscribers > 0 
+            const chances = item.TotalSubscribers > 0
                 ? ((item.LotteryApparmentsNum / item.TotalSubscribers) * 100).toFixed(3) + '%'
                 : '0.000%';
+            const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${item.LotteryNumber}</td>
                 <td>${item.CityDescription}</td>
@@ -77,16 +124,10 @@ document.addEventListener('DOMContentLoaded', function () {
             tableBody.appendChild(row);
         });
     }
-  
-    // Populate city filter options
-    function populateCityFilterOptions(data) {
-        const cityFilter = document.getElementById('city-filter');
-        const cities = [...new Set(data.map(item => item.CityDescription))].sort();
-        cityFilter.innerHTML = `<option value="">הכל</option>` + cities.map(city => `<option value="${city}">${city}</option>`).join('');
-    }
-  
-    // Add summary rows for each city
-    function addCitySummaryRows(data) {
+
+    // Populate "Summary Data" table
+    function populateSummaryData(data) {
+        summaryTableBody.innerHTML = ""; // Clear existing rows
         const cityGroups = data.reduce((acc, project) => {
             if (!acc[project.CityDescription]) {
                 acc[project.CityDescription] = [];
@@ -94,42 +135,41 @@ document.addEventListener('DOMContentLoaded', function () {
             acc[project.CityDescription].push(project);
             return acc;
         }, {});
-  
-        const citySummaryRows = [];
-  
+
+        const citySummaryData = [];
+
         Object.keys(cityGroups).forEach(city => {
             const cityProjects = cityGroups[city];
             const totalLotteryApparmentsNum = cityProjects.reduce((sum, project) => sum + project.LotteryApparmentsNum, 0);
             const maxSubscribers = Math.max(...cityProjects.map(project => project.TotalSubscribers));
+            const avgPricePerUnit = cityProjects.reduce((sum, project) => sum + project.PricePerUnit, 0) / cityProjects.length;
             const cityChances = maxSubscribers > 0 ? (totalLotteryApparmentsNum / maxSubscribers) * 100 : 0;
-            let formattedCityChances = cityChances.toFixed(3) + '%';
-  
-            // Add medals for top 3 chances
-            citySummaryRows.push({ city, totalLotteryApparmentsNum, maxSubscribers, cityChances });
+
+            citySummaryData.push({
+                city,
+                totalLotteryApparmentsNum,
+                maxSubscribers,
+                avgPricePerUnit,
+                cityChances
+            });
         });
-  
-        // Sort and add medals for the top 3 city chances
-        citySummaryRows.sort((a, b) => b.cityChances - a.cityChances);
-        citySummaryRows.forEach((summary, index) => {
+
+        citySummaryData.sort((a, b) => b.cityChances - a.cityChances);
+        citySummaryData.forEach((summary, index) => {
             let medal = '';
             if (index === 0) medal = ' 🥇';
             else if (index === 1) medal = ' 🥈';
             else if (index === 2) medal = ' 🥉';
-  
+
             const summaryRow = document.createElement('tr');
             summaryRow.innerHTML = `
-                <td colspan="1"></td>
-                <td>${summary.city} סה״כ</td>
-                <td></td>
-                <td>${summary.totalLotteryApparmentsNum}</td>
-                <td>${summary.maxSubscribers}</td>
-                <td></td>
-                <td></td>
+                <td>${summary.city}</td>
+                <td>${summary.totalLotteryApparmentsNum.toLocaleString()}</td>
+                <td>${summary.maxSubscribers.toLocaleString()}</td>
+                <td>₪${summary.avgPricePerUnit.toFixed(2).toLocaleString()}</td>
                 <td>${summary.cityChances.toFixed(3)}%${medal}</td>
-                <td></td>
             `;
-            summaryRow.style.backgroundColor = '#D3D3D3';
-            tableBody.appendChild(summaryRow);
+            summaryTableBody.appendChild(summaryRow);
         });
     }
   
@@ -161,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
   
         populateTable(filteredData);
-        addCitySummaryRows(filteredData);
+        populateSummaryData(filteredData);
         updateSummaryBar();
         resetButton.style.display = 'inline-block';
     });
@@ -175,7 +215,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('price-max').value = '';
         document.getElementById('chances-min').value = '';
         populateTable(originalData);
-        addCitySummaryRows(originalData);
+        populateSummaryData(originalData);
         updateSummaryBar();
         resetButton.style.display = 'none';
     });
@@ -254,7 +294,7 @@ document.addEventListener('DOMContentLoaded', function () {
             filteredData = filteredData.filter(item => (item.LotteryApparmentsNum / item.TotalSubscribers) * 100 >= min);
         }
         populateTable(filteredData);
-        addCitySummaryRows(filteredData);
+        populateSummaryData(filteredData);
         if (activeSort.column !== null) sortTable(activeSort.column, activeSort.column !== 1 && activeSort.column !== 2 && activeSort.column !== 8);
         updateSummaryBar();
     }
