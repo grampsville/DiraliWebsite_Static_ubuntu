@@ -2,14 +2,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const skeletonLoader = document.getElementById('skeleton-loader');
     const tableContainers = document.querySelectorAll('.table-container');
 
-    // Show skeleton loader and hide table
+    // Show skeleton loader and hide tables using .hidden class
     console.log('Showing skeleton loader');
-    skeletonLoader.style.display = 'block';
-    tableContainers.forEach(container => {
-      container.style.display = 'none';
-    });
+    skeletonLoader.classList.remove('hidden');
+    tableContainers.forEach(container => container.classList.add('hidden'));
     const tableBody = document.querySelector('#lottery-table tbody');
     const summaryTableBody = document.querySelector('#summary-table tbody');
+    let globalScrollbar = document.getElementById('global-scrollbar');
+    let globalInner = globalScrollbar?.querySelector('.global-inner');
+    let activeContainer = null;
+    let containerScrollHandler = null;
     const headers = document.querySelectorAll('th.sortable');
     const applyFilterButton = document.getElementById('apply-filter');
     const resetButton = document.getElementById('reset-button');
@@ -37,15 +39,15 @@ document.addEventListener('DOMContentLoaded', function () {
         activeTabContent.classList.add('active');
 
         // Hide all table containers
-        tableContainers.forEach(container => {
-          container.style.display = 'none';
-        });
+        tableContainers.forEach(container => container.classList.add('hidden'));
 
         // Show the table container for the active tab
         const activeTableContainer = activeTabContent.querySelector('.table-container');
         if (activeTableContainer) {
-          activeTableContainer.style.display = 'block';
+          activeTableContainer.classList.remove('hidden');
         }
+        // update global scrollbar to match newly active table
+        updateGlobalScrollbar();
 
         // If summary tab is active, re-populate summary data
         if (targetTab === 'summary-data') {
@@ -95,26 +97,65 @@ document.addEventListener('DOMContentLoaded', function () {
             populateSummaryData(originalData);
         })
         .finally(() => {
-          // Hide skeleton loader
-          skeletonLoader.style.display = 'none';
+          // Hide skeleton loader and show initial tab/table
+          skeletonLoader.classList.add('hidden');
 
           // Simulate a click on the "All Data" tab button to display the initial table
           document.querySelector('.tab-button[data-tab="all-data"]').click();
+          // ensure scrollbar sized after initial table shown
+          setTimeout(updateGlobalScrollbar, 50);
         });
   
     // Populate "All Data" table
     function populateTable(data) {
         tableBody.innerHTML = "";  // Clear existing rows
         data.forEach(item => {
-            const chances = item.TotalSubscribers > 0
-                ? ((item.LotteryApparmentsNum / item.TotalSubscribers) * 100).toFixed(3) + '%'
-                : '100.000%';
+            // Calculate remaining units after assignments
+            const localHULeft = item.LocalHousing - item.TotalLocalSubscribers;
+            const localHULeftForCalc = localHULeft <= 0 ? 0 : localHULeft;
+
+            const reserveDutyHULeft = item.HU_Reservists_L - item.TotalReservedDutySubscribers;
+            const reserveDutyHULeftForCalc = reserveDutyHULeft <= 0 ? 0 : reserveDutyHULeft;
+
+            const reserveCombatHULeft = item.HU_CombatReservist_L - item.TotalCombatReservistSubscribers;
+            const reserveCombatHULeftForCalc = reserveCombatHULeft <= 0 ? 0 : reserveCombatHULeft;
+
+            const handicappedHULeft = item.HousingUnitsForHandicapped - item.TotalHandicappedSubscribers;
+            const handicappedHULeftForCalc = handicappedHULeft <= 0 ? 0 : handicappedHULeft;
+
+            // Calculate chances for each category
+            const totalChances = item.TotalSubscribers <= 0 ? 100 : 
+                ((item.LotteryApparmentsNum - item.LocalHousing - item.HU_Reservists_L - 
+                  item.HU_CombatReservist_L - item.HousingUnitsForHandicapped) / 
+                  item.TotalSubscribers) * 100;
+            const totalChancesToDisplay = totalChances.toFixed(3) + '%';
+
+            const noStatusChances = item.TotalSubscribers <= 0 ? 100 :
+                ((item.LotteryApparmentsNum - localHULeftForCalc - reserveDutyHULeftForCalc - 
+                  reserveCombatHULeftForCalc - handicappedHULeftForCalc) / item.TotalSubscribers) * 100;
+            const noStatusChancesToDisplay = noStatusChances.toFixed(3) + '%';
+
+            const localChances = item.LocalHousing > item.TotalLocalSubscribers || item.TotalSubscribers <= 0 ? 100 :
+                (item.LocalHousing / item.TotalLocalSubscribers) * 100;
+            const localChancesToDisplay = (totalChances < localChances ? localChances : totalChances).toFixed(3) + '%';
+
+            const reserveDutyChances = item.HU_Reservists_L > item.TotalReservedDutySubscribers || item.TotalSubscribers <= 0 ? 100 :
+                (item.HU_Reservists_L / item.TotalReservedDutySubscribers) * 100;
+            const reserveDutyChancesToDisplay = (totalChances < reserveDutyChances ? reserveDutyChances : totalChances).toFixed(3) + '%';
+
+            const reserveCombatChances = item.HU_CombatReservist_L > item.TotalCombatReservistSubscribers || item.TotalSubscribers <= 0 ? 100 :
+                (item.HU_CombatReservist_L / item.TotalCombatReservistSubscribers) * 100;
+            const reserveCombatChancesToDisplay = (totalChances < reserveCombatChances ? reserveCombatChances : totalChances).toFixed(3) + '%';
+
+            const handicappedChances = item.HousingUnitsForHandicapped > item.TotalHandicappedSubscribers || item.TotalSubscribers <= 0 ? 100 :
+                (item.HousingUnitsForHandicapped / item.TotalHandicappedSubscribers) * 100;
+            const handicappedChancesToDisplay = (totalChances < handicappedChances ? handicappedChances : totalChances).toFixed(3) + '%';
+
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${item.LotteryNumber}</td>
                 <td>${item.CityDescription}</td>
                 <td>${item.ContractorDescription}</td>
-                
                 <td>${item.LotteryApparmentsNum}</td>
                 <td>${item.TotalSubscribers}</td>
                 <td>${(item.LocalHousing || 0).toLocaleString()}</td>
@@ -125,14 +166,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 <td>${(item.TotalCombatReservistSubscribers || 0).toLocaleString()}</td>
                 <td>${(item.HousingUnitsForHandicapped || 0).toLocaleString()}</td>
                 <td>${(item.TotalHandicappedSubscribers || 0).toLocaleString()}</td>
-
                 <td>₪${item.PricePerUnit.toLocaleString()}</td>
                 <td>₪${item.GrantSize.toLocaleString()}</td>
-                <td>${chances}</td>
                 <td>${item.IsReligious ? 'צביון חרדי' : ''}</td>
+                <td>${noStatusChancesToDisplay}</td>
+                <td>${localChancesToDisplay}</td>
+                <td>${reserveDutyChancesToDisplay}</td>
+                <td>${reserveCombatChancesToDisplay}</td>
+                <td>${handicappedChancesToDisplay}</td>
             `;
             tableBody.appendChild(row);
         });
+        // table size changed -> update global scrollbar
+        updateGlobalScrollbar();
+        // a delayed update ensures scrollWidth is stable in some browsers
+        setTimeout(updateGlobalScrollbar, 50);
     }
 
     // Populate "Summary Data" table
@@ -181,6 +229,9 @@ document.addEventListener('DOMContentLoaded', function () {
             `;
             summaryTableBody.appendChild(summaryRow);
         });
+        // summary table changed -> update global scrollbar (if summary visible)
+        updateGlobalScrollbar();
+        setTimeout(updateGlobalScrollbar, 50);
     }
   
     // Apply filters
@@ -308,4 +359,103 @@ document.addEventListener('DOMContentLoaded', function () {
         if (activeSort.column !== null) sortTable(activeSort.column, activeSort.column !== 1 && activeSort.column !== 2 && activeSort.column !== 8);
         updateSummaryBar();
     }
-  });
+  
+    // User type handling
+    const userTypeSelect = document.getElementById('user-type-select');
+    const USER_TYPES = {
+        REGULAR: 'רגיל',
+        LOCAL: 'בני המקום',
+        RESERVE_ACTIVE: 'מילואים פעיל',
+        RESERVE_COMBAT: 'מילואים לוחם',
+        DISABLED: 'נכים רתוקים'
+    };
+
+    // Populate user type select
+    function populateUserTypes() {
+        userTypeSelect.innerHTML = Object.values(USER_TYPES)
+            .map(type => `<option value="${type}">${type}</option>`)
+            .join('');
+        
+        // Set saved value or default to regular
+        const savedType = localStorage.getItem('selectedUserType') || USER_TYPES.REGULAR;
+        userTypeSelect.value = savedType;
+    }
+
+    // Handle user type selection
+    userTypeSelect.addEventListener('change', function() {
+        const selectedType = this.value;
+        localStorage.setItem('selectedUserType', selectedType);
+        // Here you can add logic to filter/highlight relevant columns based on user type
+    });
+
+    // Initialize user types
+    populateUserTypes();
+  
+    // update and sync a global horizontal scrollbar that controls the active table's scrollLeft
+    function updateGlobalScrollbar() {
+        globalScrollbar = document.getElementById('global-scrollbar');
+        globalInner = globalScrollbar?.querySelector('.global-inner');
+        // debug
+        // console.debug('updateGlobalScrollbar called', { globalScrollbar: !!globalScrollbar, globalInner: !!globalInner });
+
+         const activeTableContainer = document.querySelector('.tab-content.active .table-container');
+         const activeTable = activeTableContainer?.querySelector('table');
+
+         if (!activeTable || !globalScrollbar || !globalInner) {
+            if (globalScrollbar) {
+                globalScrollbar.classList.remove('visible');
+                globalScrollbar.classList.add('hidden');
+                globalScrollbar.style.display = 'none';
+            }
+             // detach previous container listener if any
+             if (activeContainer && containerScrollHandler) {
+                 activeContainer.removeEventListener('scroll', containerScrollHandler);
+                 containerScrollHandler = null;
+                 activeContainer = null;
+             }
+             return;
+         }
+
+        // set width of inner element so the global scrollbar shows correct range
+        const tableScrollWidth = Math.max(activeTable.scrollWidth, activeTable.offsetWidth, activeTableContainer.scrollWidth || 0);
+        globalInner.style.width = tableScrollWidth + 'px';
+        // Make global scrollbar visible (class + style)
+        globalScrollbar.classList.remove('hidden');
+        globalScrollbar.classList.add('visible');
+        globalScrollbar.style.display = 'block';
+        // sync initial scroll positions
+        globalScrollbar.scrollLeft = activeTableContainer.scrollLeft || 0;
+
+         // attach a single global scrollbar listener (once)
+         if (!globalScrollbar._hasGlobalListener) {
+            globalScrollbar.addEventListener('scroll', () => {
+                if (activeContainer) activeContainer.scrollLeft = globalScrollbar.scrollLeft;
+            }, { passive: true });
+            globalScrollbar._hasGlobalListener = true;
+         }
+
+         // switch container listener when active container changes
+         if (activeContainer !== activeTableContainer) {
+             if (activeContainer && containerScrollHandler) {
+                 activeContainer.removeEventListener('scroll', containerScrollHandler);
+             }
+             activeContainer = activeTableContainer;
+             containerScrollHandler = function () {
+                 globalScrollbar.scrollLeft = activeContainer.scrollLeft;
+             };
+             activeContainer.addEventListener('scroll', containerScrollHandler, { passive: true });
+         }
+        // small safety update after layout stabilizes
+        setTimeout(() => {
+            const newWidth = (activeTable.scrollWidth || tableScrollWidth);
+            globalInner.style.width = newWidth + 'px';
+        }, 60);
+     }
+ 
+     // update on window resize
+     window.addEventListener('resize', () => {
+         updateGlobalScrollbar();
+     });
+    // ensure initial sizing after window load too
+    window.addEventListener('load', () => setTimeout(updateGlobalScrollbar, 100));
+});

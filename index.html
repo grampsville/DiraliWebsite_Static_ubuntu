@@ -24,15 +24,24 @@
             box-sizing: border-box;
         }
 
-        /* Body Styling */
+        /* Body Styling — let children stretch full width */
         body {
             font-family: Arial, sans-serif;
             background-color: #FFFFFF;
             color: #000000;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            align-items: stretch; /* changed from center -> stretch */
             padding: 20px;
+        }
+
+        /* ensure main content stretches horizontally */
+        .content-wrap {
+            flex: 1 1 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch; /* changed from center -> stretch */
         }
 
         /* Title Styling */
@@ -44,11 +53,11 @@
             margin-bottom: 20px;
         }
 
-        /* Tabs */
+        /* Tabs - full width */
         .tab-container {
             display: flex;
             width: 100%;
-            max-width: 1000px;
+            max-width: none;
             justify-content: space-between;
             margin-bottom: 15px;
             border-bottom: 2px solid #6DADE1;
@@ -70,23 +79,27 @@
             color: #FFFFFF;
         }
 
+        /* tab content: hidden by default; when active becomes a column-flex that fills the available space */
         .tab-content {
             display: none;
             width: 100%;
-            max-width: 1000px;
+            max-width: none;
         }
 
         .tab-content.active {
-            display: block;
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto; /* allow it to grow inside .content-wrap */
+            width: 100%;
         }
 
-        /* Toolbar and Filters */
+        /* Toolbar and Filters (full width) */
         .toolbar {
             display: flex;
             justify-content: space-between;
             margin-bottom: 10px;
             width: 100%;
-            max-width: 1000px;
+            max-width: none;
 
             flex-direction: column;
             align-items: right;
@@ -131,7 +144,7 @@
             gap: 8px;
             margin-bottom: 10px;
             width: 100%;
-            max-width: 1000px;
+            max-width: none;
         }
 
         .summary-card {
@@ -149,45 +162,130 @@
             font-weight: bold;
         }
 
+        /* simple utility used by script.js to hide/show elements */
+        .hidden { display: none !important; }
+
         /* Table Styling */
         .table-container {
-            display: none; /* Hide by default */
+            display: block; /* visible by default; script will hide via .hidden while loading */
             width: 100%;
-            max-width: 1000px;
+            max-width: 100%;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            overflow-x: auto;
+            overflow-y: auto;         /* vertical scrolling inside the panel */
+            overflow-x: auto;         /* allow horizontal scrolling (global scrollbar will control it) */
             border-radius: 8px;
             background-color: #FFFFFF;
-        }
-
-        table {
+            box-sizing: border-box;
+            padding: 8px;             /* keep scrollbars inside the panel */
+            /* inside the flexed tab-content let the table container grow to fill available space */
+            flex: 1 1 auto;
+            max-height: none;
+            position: relative;       /* needed for sticky columns */
+            isolation: isolate;       /* create stacking context for z-index */
+         }
+         /* hide the native horizontal scrollbar visually but keep scrolling enabled */
+         .table-container {
+            -ms-overflow-style: none;  /* IE/Edge */
+            scrollbar-width: none;     /* Firefox */
+         }
+         .table-container::-webkit-scrollbar { /* WebKit */
+            height: 0;
+            width: 0;
+         }
+ 
+         /* global page-level horizontal scrollbar - simple bottom position like native browser scrollbar */
+         .global-scrollbar {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 16px;
             width: 100%;
-            border-collapse: collapse;
-            background-color: #FFFFFF;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
+            overflow-x: auto;
+            overflow-y: hidden;
+            z-index: 9999;
+            background: #fff;
+         }
+         .global-scrollbar .global-inner {
+            height: 1px;
+         }
+ 
+         /* Table: size to content (can grow wider than panel) and keep auto layout; cells still wrap */
+         table {
+             width: max-content; /* table will be as wide as needed */
+             border-collapse: collapse;
+             background-color: #FFFFFF;
+             border-radius: 8px;
+             table-layout: auto;
+         }
+ 
+        /* Table cell base styling */
         th,
         td {
             padding: 8px;
             text-align: center;
             border-bottom: 1px solid #D3D3D3;
+            white-space: normal;       /* allow wrapping */
+            word-break: break-word;    /* break long words/URLs */
+            overflow-wrap: anywhere;
+            max-width: 180px;          /* consistent width cap for all cells */
+            min-width: 120px;          /* ensure minimum readable width */
+            width: auto;               /* let content determine width within limits */
         }
 
+        /* Sticky Columns - ensure they maintain the same width constraints */
+        th:nth-child(1),
+        td:nth-child(1),
+        th:nth-child(2),
+        td:nth-child(2),
+        th:nth-child(17),
+        td:nth-child(17) {
+            max-width: 180px;          /* match regular cells */
+            min-width: 120px;
+            width: auto;
+        }
+ 
+         th,
+         td {
+             padding: 8px;
+             text-align: center;
+             border-bottom: 1px solid #D3D3D3;
+             white-space: normal;       /* allow wrapping */
+             word-break: break-word;    /* break long words/URLs */
+             overflow-wrap: anywhere;
+             max-width: 260px;          /* reasonable per-column cap so long strings wrap */
+         }
+ 
+        /* Make header cells sticky at the top of the table panel so the header stays visible
+           while the rows scroll inside .table-container.
+           We offset `top` by the container padding so the header aligns correctly. */
         th {
             background-color: #6DADE1;
             color: #FFFFFF;
             cursor: pointer;
-            position: relative;
+            position: sticky;
+            top: 8px;                 /* equals .table-container padding to align under panel edge */
+            z-index: 6;               /* sit above table rows */
             padding-right: 20px;
             /* Adjust space for arrow */
         }
-
-        th.sortable:hover {
-            background-color: #58E0A5;
+ 
+        /* subtle bottom separator for sticky header to improve contrast over scrolling rows */
+        thead th::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -1px;
+            height: 1px;
+            background: rgba(0,0,0,0.08);
+            pointer-events: none;
         }
-
+ 
+         th.sortable:hover {
+             background-color: #58E0A5;
+         }
+ 
         /* Highlight rows */
         tr.summary-row {
             background-color: #D3D3D3;
@@ -324,7 +422,7 @@
         /* User type selector styling */
         .user-type-container {
             width: 100%;
-            max-width: 1000px;
+            max-width: none;
             display: flex;
             align-items: center;
             justify-content: flex-start;
@@ -392,7 +490,7 @@
             .table-container {
                 width: 100%;
                 max-width: 100%;
-                overflow-x: auto;
+                overflow: auto;
                 -webkit-overflow-scrolling: touch;
                 /* Smooth scrolling on iOS */
             }
@@ -416,7 +514,68 @@
             footer {
                 font-size: 0.75em;
             }
-    }
+        }
+
+        /* Sticky Columns */
+        th:nth-child(1),
+        td:nth-child(1) {  /* מספר הגרלה */
+            position: sticky;
+            left: 8px;     /* match container padding */
+            background: #FFFFFF;
+            z-index: 2;
+            min-width: 100px;
+        }
+        
+        th:nth-child(2),
+        td:nth-child(2) {  /* יישוב */
+            position: sticky;
+            left: calc(8px + 100px); /* match first column min-width */
+            background: #FFFFFF;
+            z-index: 2;
+            min-width: 120px;
+        }
+
+        th:nth-child(17),
+        td:nth-child(17) {  /* סיכויי זכייה */
+            position: sticky;
+            right: 8px;    /* match container padding */
+            background: #FFFFFF;
+            z-index: 2;
+            min-width: 200px;  /* increased to fit content */
+            padding-left: 16px; /* give some breathing room */
+            padding-right: 16px;
+            width: auto;
+        }
+
+        /* ensure sticky headers match their column backgrounds */
+        th:nth-child(1) { background: #6DADE1; z-index: 3; }
+        th:nth-child(2) { background: #6DADE1; z-index: 3; }
+        th:nth-child(17) { background: #6DADE1; z-index: 3; }
+
+        /* better shadow effect for visual separation */
+        td:nth-child(2)::after,
+        th:nth-child(2)::after {  /* also add to header */
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -8px;
+            bottom: 0;
+            width: 8px;
+            background: linear-gradient(to right, rgba(0,0,0,0.1), transparent);
+            pointer-events: none;
+        }
+
+        td:nth-child(17)::before,
+        th:nth-child(17)::before {  /* also add to header */
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -8px;
+            bottom: 0;
+            width: 8px;
+            background: linear-gradient(to left, rgba(0,0,0,0.1), transparent);
+            pointer-events: none;
+        }
     </style>
 </head>
 
@@ -430,15 +589,17 @@
     </div>
     <h1>דירה לי - כל הנתונים של הגרלות דירה בהנחה, במקום אחד</h1>
 
+    <!-- main content fills the space between header and footer -->
+    <div class="content-wrap">
+    <!-- global horizontal scrollbar (hidden until tables populated) -->
+    <div id="global-scrollbar" class="global-scrollbar hidden" aria-hidden="true">
+        <div class="global-inner"></div>
+    </div>
     <!-- User Type selector (inserted above Tab Navigation) -->
     <div class="user-type-container" dir="rtl">
         <span class="user-type-label">סוג משתמש:</span>
         <select id="user-type-select" aria-label="בחר סוג משתמש">
-            <option value="">בחר</option>
-            <option value="locals">בני המקום</option>
-            <option value="reserve_active">מילואים פעיל</option>
-            <option value="reserve_combat">מילואים לוחם</option>
-            <option value="disabled">נכים רתוקים</option>
+            <!-- Options will be populated by JavaScript -->
         </select>
     </div>
 
@@ -599,9 +760,43 @@
                                 <span class="sort-arrow-up sort-arrow"></span>
                                 <span class="sort-arrow-down sort-arrow"></span>
                             </div>
-                            סיכויי זכייה
+                            הערות
                         </th>
-                        <th>הערות</th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            סיכויי זכייה ללא מעמד מיוחד
+                        </th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            סיכויי זכייה לבני המקום
+                        </th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            סיכויי זכייה למילואים פעילים
+                        </th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            סיכויי זכייה למילואים לוחמים
+                        </th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            סיכויי זכייה לנכים רתוקים
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
@@ -662,11 +857,11 @@
     </div>
 
     <div id="message"></div>
-
+    </div><!-- /.content-wrap -->
     <!-- JavaScript for Functionality -->
     <script src="script.js"></script>
     <footer
-        style="margin-top: 20px; padding: 15px; background-color: #f9f9f9; text-align: center; font-size: 0.9em; color: #555;">
+        style="margin-top: 20px; padding: 15px; background-color: #f9f9f9; text-align: center; font-size: 0.9em; color: #555; width: 100%; max-width: none; box-sizing: border-box;">
         <p>
             הבהרה משפטית זו נועדה לקבוע כי כל התכנים, הנתונים, המידע, התחזיות, ההערכות והתיאורים המופיעים באתר זה נמסרים לצורך מתן מידע כללי בלבד, ואינם מהווים ייעוץ מקצועי, משפטי, פיננסי, השקעותי, חשבונאי, מיסויי או כלכלי מכל סוג שהוא. האתר אינו מציג המלצה, הצעה, הבטחה או עידוד לביצוע השקעה, התקשרות, התחייבות או פעולה כלשהי. המידע המוצג בו אינו מתיימר לשמש כמידע מקיף, שלם, מדויק, מחייב, מעודכן או נכון לכל מקרה, ויש להתייחס אליו בזהירות מרבית, בהתאם לשיקול דעת אישי, תוך ביצוע בדיקה עצמאית ומלאה. כל המידע באתר ניתן לצפייה כמידע תיאורטי בלבד, ואין כל אחריות מצד הנהלת האתר כלפי דיוקו או שלמותו של המידע.
 
