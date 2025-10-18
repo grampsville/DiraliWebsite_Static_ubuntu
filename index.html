@@ -516,65 +516,37 @@
             }
         }
 
-        /* Sticky Columns */
+        /* Sticky Columns - Base Styles */
         th:nth-child(1),
-        td:nth-child(1) {  /* מספר הגרלה */
+        td:nth-child(1) {  /* יישוב */
             position: sticky;
-            left: 8px;     /* match container padding */
-            background: #FFFFFF;
-            z-index: 2;
-            min-width: 100px;
-        }
-        
-        th:nth-child(2),
-        td:nth-child(2) {  /* יישוב */
-            position: sticky;
-            left: calc(8px + 100px); /* match first column min-width */
+            right: 8px;
             background: #FFFFFF;
             z-index: 2;
             min-width: 120px;
+            border-left: 1px solid #D3D3D3;
         }
 
-        th:nth-child(17),
-        td:nth-child(17) {  /* סיכויי זכייה */
+        /* Headers need higher z-index and different background */
+        thead tr th:nth-child(1) {
             position: sticky;
-            right: 8px;    /* match container padding */
-            background: #FFFFFF;
-            z-index: 2;
-            min-width: 200px;  /* increased to fit content */
-            padding-left: 16px; /* give some breathing room */
-            padding-right: 16px;
-            width: auto;
+            right: 8px;
+            background: #6DADE1 !important;
+            z-index: 4;
+            /* Create overlay effect */
+            box-shadow: 2px 0 3px -2px rgba(0,0,0,0.2);
         }
 
-        /* ensure sticky headers match their column backgrounds */
-        th:nth-child(1) { background: #6DADE1; z-index: 3; }
-        th:nth-child(2) { background: #6DADE1; z-index: 3; }
-        th:nth-child(17) { background: #6DADE1; z-index: 3; }
-
-        /* better shadow effect for visual separation */
-        td:nth-child(2)::after,
-        th:nth-child(2)::after {  /* also add to header */
-            content: '';
-            position: absolute;
-            top: 0;
-            right: -8px;
-            bottom: 0;
-            width: 8px;
-            background: linear-gradient(to right, rgba(0,0,0,0.1), transparent);
-            pointer-events: none;
+        /* Ensure cells have solid background to prevent content showing through */
+        td:nth-child(1) {
+            background: #FFFFFF !important;
+            box-shadow: 2px 0 3px -2px rgba(0,0,0,0.2);
         }
 
-        td:nth-child(17)::before,
-        th:nth-child(17)::before {  /* also add to header */
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -8px;
-            bottom: 0;
-            width: 8px;
-            background: linear-gradient(to left, rgba(0,0,0,0.1), transparent);
-            pointer-events: none;
+        /* Remove any conflicting styles */
+        th:nth-child(1)::after,
+        td:nth-child(1)::after {
+            display: none;
         }
     </style>
 </head>
@@ -652,14 +624,14 @@
                                 <span class="sort-arrow-up sort-arrow"></span>
                                 <span class="sort-arrow-down sort-arrow"></span>
                             </div>
-                            מספר הגרלה
+                            יישוב
                         </th>
                         <th class="sortable-header sortable">
                             <div class="arrow-container">
                                 <span class="sort-arrow-up sort-arrow"></span>
                                 <span class="sort-arrow-down sort-arrow"></span>
                             </div>
-                            יישוב
+                            מספר הגרלה
                         </th>
                         <th class="sortable-header sortable">
                             <div class="arrow-container">

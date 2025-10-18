@@ -109,6 +109,11 @@ document.addEventListener('DOMContentLoaded', function () {
     // Populate "All Data" table
     function populateTable(data) {
         tableBody.innerHTML = "";  // Clear existing rows
+        
+        // Create city summary dictionary
+        const citySummaries = {};
+        
+        // First pass: collect data by city
         data.forEach(item => {
             // Calculate remaining units after assignments
             const localHULeft = item.LocalHousing - item.TotalLocalSubscribers;
@@ -151,10 +156,61 @@ document.addEventListener('DOMContentLoaded', function () {
                 (item.HousingUnitsForHandicapped / item.TotalHandicappedSubscribers) * 100;
             const handicappedChancesToDisplay = (totalChances < handicappedChances ? handicappedChances : totalChances).toFixed(3) + '%';
 
+            // Create or get city entry
+            if (!citySummaries[item.CityDescription]) {
+                citySummaries[item.CityDescription] = {
+                    rows: [],
+                    totals: {
+                        totalHousingUnits: 0,
+                        localHousingUnits: 0,
+                        reserveDutyHousingUnits: 0,
+                        reserveCombatHousingUnits: 0,
+                        handicappedHousingUnits: 0,
+                        noStatusChances: [],
+                        localChances: [],
+                        reserveDutyChances: [],
+                        reserveCombatChances: [],
+                        handicappedChances: []
+                    }
+                };
+            }
+
+            // Add lottery data to city summary
+            const cityData = citySummaries[item.CityDescription];
+            cityData.rows.push({
+                lotteryNumber: item.LotteryNumber,
+                data: {
+                    totalHousingUnits: item.LotteryApparmentsNum,
+                    localHousingUnits: item.LocalHousing || 0,
+                    reserveDutyHousingUnits: item.HU_Reservists_L || 0,
+                    reserveCombatHousingUnits: item.HU_CombatReservist_L || 0,
+                    handicappedHousingUnits: item.HousingUnitsForHandicapped || 0,
+                    pricePerUnit: item.PricePerUnit, // Add this line
+                    noStatusChances: parseFloat(noStatusChances),
+                    localChances: parseFloat(localChances),
+                    reserveDutyChances: parseFloat(reserveDutyChances),
+                    reserveCombatChances: parseFloat(reserveCombatChances),
+                    handicappedChances: parseFloat(handicappedChances)
+                }
+            });
+
+            // Update running totals
+            cityData.totals.totalHousingUnits += item.LotteryApparmentsNum;
+            cityData.totals.localHousingUnits += (item.LocalHousing || 0);
+            cityData.totals.reserveDutyHousingUnits += (item.HU_Reservists_L || 0);
+            cityData.totals.reserveCombatHousingUnits += (item.HU_CombatReservist_L || 0);
+            cityData.totals.handicappedHousingUnits += (item.HousingUnitsForHandicapped || 0);
+            cityData.totals.noStatusChances.push(parseFloat(noStatusChances));
+            cityData.totals.localChances.push(parseFloat(localChances));
+            cityData.totals.reserveDutyChances.push(parseFloat(reserveDutyChances));
+            cityData.totals.reserveCombatChances.push(parseFloat(reserveCombatChances));
+            cityData.totals.handicappedChances.push(parseFloat(handicappedChances));
+
+            // Create and append the regular row
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${item.LotteryNumber}</td>
                 <td>${item.CityDescription}</td>
+                <td>${item.LotteryNumber}</td>
                 <td>${item.ContractorDescription}</td>
                 <td>${item.LotteryApparmentsNum}</td>
                 <td>${item.TotalSubscribers}</td>
@@ -177,9 +233,50 @@ document.addEventListener('DOMContentLoaded', function () {
             `;
             tableBody.appendChild(row);
         });
-        // table size changed -> update global scrollbar
+
+        // Second pass: add summary rows for each city
+        Object.entries(citySummaries).forEach(([city, cityData]) => {
+            const summaryRow = document.createElement('tr');
+            summaryRow.classList.add('city-summary-row');
+            
+            // Calculate averages for chances and price
+            const avgNoStatusChances = (cityData.totals.noStatusChances.reduce((a, b) => a + b, 0) / cityData.totals.noStatusChances.length).toFixed(3);
+            const avgLocalChances = (cityData.totals.localChances.reduce((a, b) => a + b, 0) / cityData.totals.localChances.length).toFixed(3);
+            const avgReserveDutyChances = (cityData.totals.reserveDutyChances.reduce((a, b) => a + b, 0) / cityData.totals.reserveDutyChances.length).toFixed(3);
+            const avgReserveCombatChances = (cityData.totals.reserveCombatChances.reduce((a, b) => a + b, 0) / cityData.totals.reserveCombatChances.length).toFixed(3);
+            const avgHandicappedChances = (cityData.totals.handicappedChances.reduce((a, b) => a + b, 0) / cityData.totals.handicappedChances.length).toFixed(3);
+            
+            // Calculate average price per unit for the city
+            const avgPricePerUnit = cityData.rows.reduce((sum, row) => sum + row.data.pricePerUnit, 0) / cityData.rows.length;
+
+            summaryRow.innerHTML = `
+                <td>${city}</td>
+                <td>סה״כ</td>
+                <td>-</td>
+                <td>${cityData.totals.totalHousingUnits}</td>
+                <td>-</td>
+                <td>${cityData.totals.localHousingUnits}</td>
+                <td>-</td>
+                <td>${cityData.totals.reserveDutyHousingUnits}</td>
+                <td>-</td>
+                <td>${cityData.totals.reserveCombatHousingUnits}</td>
+                <td>-</td>
+                <td>${cityData.totals.handicappedHousingUnits}</td>
+                <td>-</td>
+                <td>₪${avgPricePerUnit.toLocaleString()}</td>
+                <td>-</td>
+                <td>-</td>
+                <td>${avgNoStatusChances}%</td>
+                <td>${avgLocalChances}%</td>
+                <td>${avgReserveDutyChances}%</td>
+                <td>${avgReserveCombatChances}%</td>
+                <td>${avgHandicappedChances}%</td>
+            `;
+            tableBody.appendChild(summaryRow);
+        });
+
+        // Update global scrollbar
         updateGlobalScrollbar();
-        // a delayed update ensures scrollWidth is stable in some browsers
         setTimeout(updateGlobalScrollbar, 50);
     }
 
@@ -459,3 +556,16 @@ document.addEventListener('DOMContentLoaded', function () {
     // ensure initial sizing after window load too
     window.addEventListener('load', () => setTimeout(updateGlobalScrollbar, 100));
 });
+
+// Add CSS for city summary rows
+const style = document.createElement('style');
+style.textContent = `
+    .city-summary-row {
+        background-color: #f0f8ff;
+        font-weight: bold;
+    }
+    .city-summary-row td {
+        border-top: 2px solid #6DADE1;
+    }
+`;
+document.head.appendChild(style);
