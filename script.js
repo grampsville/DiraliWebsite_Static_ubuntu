@@ -108,14 +108,24 @@ document.addEventListener('DOMContentLoaded', function () {
         data.forEach(item => {
             const chances = item.TotalSubscribers > 0
                 ? ((item.LotteryApparmentsNum / item.TotalSubscribers) * 100).toFixed(3) + '%'
-                : '0.000%';
+                : '100.000%';
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${item.LotteryNumber}</td>
                 <td>${item.CityDescription}</td>
                 <td>${item.ContractorDescription}</td>
+                
                 <td>${item.LotteryApparmentsNum}</td>
                 <td>${item.TotalSubscribers}</td>
+                <td>${(item.LocalHousing || 0).toLocaleString()}</td>
+                <td>${(item.TotalLocalSubscribers || 0).toLocaleString()}</td>
+                <td>${(item.HU_Reservists_L || 0).toLocaleString()}</td>
+                <td>${(item.TotalReservedDutySubscribers || 0).toLocaleString()}</td>
+                <td>${(item.HU_CombatReservist_L || 0).toLocaleString()}</td>
+                <td>${(item.TotalCombatReservistSubscribers || 0).toLocaleString()}</td>
+                <td>${(item.HousingUnitsForHandicapped || 0).toLocaleString()}</td>
+                <td>${(item.TotalHandicappedSubscribers || 0).toLocaleString()}</td>
+
                 <td>₪${item.PricePerUnit.toLocaleString()}</td>
                 <td>₪${item.GrantSize.toLocaleString()}</td>
                 <td>${chances}</td>

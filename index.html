@@ -321,6 +321,29 @@
             /* Example styling for logo, adjust based on actual logo size */
         }
 
+        /* User type selector styling */
+        .user-type-container {
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .user-type-label {
+            font-weight: bold;
+            color: #6DADE1;
+        }
+
+        #user-type-select {
+            padding: 6px;
+            border: 1px solid #D3D3D3;
+            border-radius: 4px;
+            background: #fff;
+        }
+
         /* For small devices (600px and below) */
         @media (max-width: 600px) {
             body {
@@ -393,12 +416,7 @@
             footer {
                 font-size: 0.75em;
             }
-        }
     }
-
-
-
-        
     </style>
 </head>
 
@@ -411,6 +429,18 @@
       <div class="skeleton-row"></div>
     </div>
     <h1>דירה לי - כל הנתונים של הגרלות דירה בהנחה, במקום אחד</h1>
+
+    <!-- User Type selector (inserted above Tab Navigation) -->
+    <div class="user-type-container" dir="rtl">
+        <span class="user-type-label">סוג משתמש:</span>
+        <select id="user-type-select" aria-label="בחר סוג משתמש">
+            <option value="">בחר</option>
+            <option value="locals">בני המקום</option>
+            <option value="reserve_active">מילואים פעיל</option>
+            <option value="reserve_combat">מילואים לוחם</option>
+            <option value="disabled">נכים רתוקים</option>
+        </select>
+    </div>
 
     <!-- Tab Navigation -->
     <div class="tab-container">
@@ -491,6 +521,65 @@
                             </div>
                             נרשמים בהגרלה
                         </th>
+
+                        <!-- New columns inserted after "נרשמים בהגרלה" -->
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            דירות לבני המקום
+                        </th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            נרשמים בני המקום
+                        </th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            דירות לחיילי מילואים פעילים
+                        </th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            נרשמים חיילי מילואים פעילים
+                        </th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            דירות לחיילי מילואים לוחמים
+                        </th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            נרשמים חיילי מילואים לוחמים
+                        </th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            דירות לנכים רתוקים
+                        </th>
+                        <th class="sortable-header sortable">
+                            <div class="arrow-container">
+                                <span class="sort-arrow-up sort-arrow"></span>
+                                <span class="sort-arrow-down sort-arrow"></span>
+                            </div>
+                            נרשמים נכים רתוקים
+                        </th>
+
                         <th class="sortable-header sortable">
                             <div class="arrow-container">
                                 <span class="sort-arrow-up sort-arrow"></span>
